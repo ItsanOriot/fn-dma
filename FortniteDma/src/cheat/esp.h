@@ -10,11 +10,11 @@ namespace esp {
 			PlayerCache player = it.second;
 
 			// valid?
-			if (!player.Mesh) continue;
+			if (!player.Pawn || !player.Mesh || !player.BoneArray) continue;
 
 			bool IsVis = point::Seconds - player.last_render <= 0.06f;
 
-			bool IsBot = player.isBot & (1 << 3);
+			bool IsBot = player.isBot & 0x08;
 
 			bool IsDying = player.isDying & 0x10;
 
@@ -27,21 +27,16 @@ namespace esp {
 			// check if its me ༼ つ ◕_◕ ༽つ
 			if (player.PlayerState == point::PlayerState) continue;
 
-			// check if its a teamate (omg friends) (◕‿◕✿)
-			if (player.TeamId == local_player::localTeam) continue;
+			// chcek if in not lobby and check if its a teamate (omg friends) (◕‿◕✿)
+			if (point::Player && player.TeamId == local_player::localTeam) continue;
 
 			// ok maybe we can draw now
 
-			// this should prob been done elsewhere maybe in updatePlayers?
-			Vector3 Head3D = CalcMatrix(player.HeadBone, player.component_to_world);
-			Vector3 Bottom3D = CalcMatrix(player.BottomBone, player.component_to_world);
-
-			// world to screen
-			Vector3 Head2D = w2s(Head3D);
-			Vector3 Bottom2D = w2s(Bottom3D);
-
 			// just a circle on the head for now
-			ImGui::GetBackgroundDrawList()->AddCircleFilled(ImVec2(Head2D.x, Head2D.y), 10.f, ImColor(255, 255, 255, 255), 100);
+			if (IsVis)
+				ImGui::GetBackgroundDrawList()->AddCircleFilled(ImVec2(player.Head2D.x, player.Head2D.y), 10.f, ImColor(0, 255, 0, 255), 100);
+			else
+				ImGui::GetBackgroundDrawList()->AddCircleFilled(ImVec2(player.Head2D.x, player.Head2D.y), 10.f, ImColor(255, 0, 0, 255), 100);
 
 
 			// this is how skeleton would be but i repeat CalcMatrix should be done elsewhere. maybe.

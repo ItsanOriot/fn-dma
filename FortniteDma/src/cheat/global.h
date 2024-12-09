@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 namespace local_player {
-    inline  Vector3 localPos = Vector3();
+    inline  Vector3 localPos = Vector3(); // not used
     inline uint32_t localTeam = NULL;
 }
 

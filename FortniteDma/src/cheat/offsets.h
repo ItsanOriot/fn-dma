@@ -32,9 +32,9 @@ namespace offsets {
 	uintptr_t BoneArray = 0x5A8;
 	uintptr_t Velocity = 0x180;
 	uintptr_t Kills = 0x1274; //AFortPlayerStateAthena.KillScore: 0x1274
-	uintptr_t IsDBNO = 0x93A; // ( BitField Index -> 4 )
-	uintptr_t isDying = 0x758; // ( BitField Index -> 4 )
-	uintptr_t bIsABot = 0x29A; // ( BitField Index -> 3 )
+	uintptr_t IsDBNO = 0x962; // ( BitField Index -> 4 ) maybe
+	uintptr_t isDying = 0x718; // ( BitField Index -> 4 ) maybe
+	uintptr_t bIsABot = 0x2b2; // ( BitField Index -> 3 ) maybe
 	uintptr_t TeamId = 0x1261;
 	uintptr_t RootComponent = 0x1b0;
 	uintptr_t LocationUnderReticle = 0x2700;

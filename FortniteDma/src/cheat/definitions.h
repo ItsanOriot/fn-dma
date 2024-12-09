@@ -250,11 +250,13 @@ struct PlayerCache {
 	uintptr_t PlayerState = 0;
 	uintptr_t Pawn = 0;
 	uintptr_t Mesh = 0;
+	uintptr_t BoneArray = 0;
 	uintptr_t BoneArray1 = 0;
 	uintptr_t BoneArray2 = 0;
 	uintptr_t RootComponent = 0;
 	Vector3 Velocity{};
 	uint32_t TeamId = 0;
+	float last_render = 0;
 
 	BYTE isDying = false; // & 0x10
 	BYTE isDBNO = false;
@@ -280,7 +282,14 @@ struct PlayerCache {
 
 	FTransform component_to_world{};
 
-	float last_render = 0;
+	// world
+	Vector3 Head3D{};
+	Vector3 Bottom3D{};
+
+	// screen
+	Vector3 Head2D{};
+	Vector3 Bottom2D{};
+
 };
 
 struct tarray

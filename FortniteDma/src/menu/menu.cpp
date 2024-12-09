@@ -90,6 +90,14 @@ void menu::PlayerListWindow() {
 			ImGui::Text(std::format("Velocity -> x: {:.2f} y: {:.2f} z: {:.2f}", PlayerList[selectedPlayer].Velocity.x, PlayerList[selectedPlayer].Velocity.y, PlayerList[selectedPlayer].Velocity.z).c_str());
 			ImGui::Text(std::format("Last Render -> {:.2f}", PlayerList[selectedPlayer].last_render).c_str());
 			ImGui::Separator();
+			ImGui::Text("World Postions");
+			ImGui::Text(std::format("Head -> x: {:.2f} y: {:.2f} z: {:.2f}", PlayerList[selectedPlayer].Head3D.x, PlayerList[selectedPlayer].Head3D.y, PlayerList[selectedPlayer].Head3D.z).c_str());
+			ImGui::Text(std::format("Bottom -> x: {:.2f} y: {:.2f} z: {:.2f}", PlayerList[selectedPlayer].Bottom3D.x, PlayerList[selectedPlayer].Bottom3D.y, PlayerList[selectedPlayer].Bottom3D.z).c_str());
+			ImGui::Separator();
+			ImGui::Text("Screen Postions");
+			ImGui::Text(std::format("Head -> x: {:.2f} y: {:.2f} z: {:.2f}", PlayerList[selectedPlayer].Head2D.x, PlayerList[selectedPlayer].Head2D.y, PlayerList[selectedPlayer].Head2D.z).c_str());
+			ImGui::Text(std::format("Bottom -> x: {:.2f} y: {:.2f} z: {:.2f}", PlayerList[selectedPlayer].Bottom2D.x, PlayerList[selectedPlayer].Bottom2D.y, PlayerList[selectedPlayer].Bottom2D.z).c_str());
+			ImGui::Separator();
 		}ImGui::End();
 	}
 }
@@ -142,10 +150,10 @@ void menu::AdvancedDebugWindow() {
 		ImGui::SetCursorPos(ImVec2(x, y += 20));
 		ImGui::Text(std::format("Camera Rotation -> x: {:.2f} y: {:.2f}", mainCamera.Rotation.x, mainCamera.Rotation.y).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 20));
+		ImGui::Text(std::format("Camera FieldOfView -> {:.2f} ", mainCamera.FieldOfView).c_str());
+		ImGui::SetCursorPos(ImVec2(x, y += 20));
 		ImGui::Text(std::format("Seconds -> {:.2f}", point::Seconds).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 40));
-		ImGui::Text(std::format("Local Position -> x: {:.2f} y: {:.2f} z: {:.2f}", local_player::localPos.x, local_player::localPos.y, local_player::localPos.z).c_str());
-		ImGui::SetCursorPos(ImVec2(x, y += 20));
 		ImGui::Text(std::format("Local Team -> {:d}", local_player::localTeam).c_str());
 		//ImGui::SetCursorPos(ImVec2(x, y += 20));
 		//ImGui::Text(std::format("LocalPlayers -> 0x{:X}", point::LocalPlayers).c_str());
