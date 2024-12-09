@@ -202,7 +202,8 @@ bool InitWindow(HINSTANCE instance, INT cmd_show)
 
 	// fonts
 
-	notosans_font = io.Fonts->AddFontFromMemoryTTF(fonts::notosans, sizeof(fonts::notosans), 18.5f);
+	fonts::notosans_font = io.Fonts->AddFontFromMemoryTTF(fonts::notosans, sizeof(fonts::notosans), 18.5f);
+	fonts::typenatural_font = io.Fonts->AddFontFromMemoryTTF(fonts::typenatural, sizeof(fonts::typenatural), 18.5f);
 
 	return true;
 }

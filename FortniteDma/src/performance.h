@@ -24,6 +24,13 @@ private:
 
 namespace stats {
 
+
+    inline CircularBuffer GDataData(1000);
+    inline CircularBuffer updateCameraData(1000);
+    inline CircularBuffer updatePlayerListData(1000);
+    inline CircularBuffer updatePlayersData(1000);
+
+
     inline CircularBuffer memoryThreadData(1000);
     inline CircularBuffer mainThreadData(1000);
 

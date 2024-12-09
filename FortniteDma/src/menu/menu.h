@@ -6,6 +6,7 @@ namespace menu {
 	void Menu();
 	void PlayerListWindow();
 	void AdvancedDebugWindow();
-	void Statistics();
+	void StatisticsWindow();
+	void InternalsWindow();
 
 }

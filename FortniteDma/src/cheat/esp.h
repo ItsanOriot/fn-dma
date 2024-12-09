@@ -16,77 +16,58 @@ namespace esp {
 
 			bool IsBot = player.isBot & 0x08;
 
-			bool IsDying = player.isDying & 0x10;
+			bool IsDying = player.isDying & 0x20;
 
 			// knocked
 			bool IsDBNO = player.isDBNO & 0x10;
 
 			// check if dying (dead) ◉_◉
-			if (IsDying) continue;
+			if (IsDying) {
+				//ImGui::GetBackgroundDrawList()->AddText((ImFont*)fonts::notosans_font, 18.5f, ImVec2(player.Neck2D.x, player.Neck2D.y), ImColor(255, 255, 255, 255), "dying");
+				continue;
+			}
 
 			// check if its me ༼ つ ◕_◕ ༽つ
-			if (player.PlayerState == point::PlayerState) continue;
+			if (player.PlayerState == point::PlayerState) {
+				//ImGui::GetBackgroundDrawList()->AddText((ImFont*)fonts::notosans_font, 18.5f, ImVec2(player.Neck2D.x, player.Neck2D.y), ImColor(255, 255, 255, 255), "me");
+				continue;
+			}
 
-			// chcek if in not lobby and check if its a teamate (omg friends) (◕‿◕✿)
-			if (point::Player && player.TeamId == local_player::localTeam) continue;
+			// chcek if not in lobby and check if its a teammate (omg friends) (◕‿◕✿)
+			if (point::Player && player.TeamId == local_player::localTeam) {
+				//ImGui::GetBackgroundDrawList()->AddText((ImFont*)fonts::notosans_font, 18.5f ,ImVec2(player.Neck2D.x, player.Neck2D.y), ImColor(255,255,255,255), "teammate");
+				continue;
+			}
 
 			// ok maybe we can draw now
 
-			// just a circle on the head for now
-			if (IsVis)
-				ImGui::GetBackgroundDrawList()->AddCircleFilled(ImVec2(player.Head2D.x, player.Head2D.y), 10.f, ImColor(0, 255, 0, 255), 100);
-			else
-				ImGui::GetBackgroundDrawList()->AddCircleFilled(ImVec2(player.Head2D.x, player.Head2D.y), 10.f, ImColor(255, 0, 0, 255), 100);
+			// skeleton
+			if (settings::config::skeleton)
+			{
+				// color
+				ImColor colSK = ImColor(255,0,0,255);
+				if (IsVis)
+					colSK = ImColor(0, 255, 0, 255);
 
+				//thickness
+				float tk = 2.f;
 
-			// this is how skeleton would be but i repeat CalcMatrix should be done elsewhere. maybe.
-			/*
-			Vector3 vHip = CalcMatrix(pair.second.HipBone, component_to_world);
-			Vector3 vNeck = CalcMatrix(pair.second.NeckBone, component_to_world);
-			Vector3 vUpperArmLeft = CalcMatrix(pair.second.UpperArmLeftBone, component_to_world);
-			Vector3 vUpperArmRight = CalcMatrix(pair.second.UpperArmRightBone, component_to_world);
-			Vector3 vLeftHand = CalcMatrix(pair.second.LeftHandBone, component_to_world);
-			Vector3 vRightHand = CalcMatrix(pair.second.RightHandBone, component_to_world);
-			Vector3 vLeftHand1 = CalcMatrix(pair.second.LeftHand1Bone, component_to_world);
-			Vector3 vRightHand1 = CalcMatrix(pair.second.RightHand1Bone, component_to_world);
-			Vector3 vRightThigh = CalcMatrix(pair.second.RightThighBone, component_to_world);
-			Vector3 vLeftThigh = CalcMatrix(pair.second.LeftThighBone, component_to_world);
-			Vector3 vRightCalf = CalcMatrix(pair.second.RightCalfBone, component_to_world);
-			Vector3 vLeftCalf = CalcMatrix(pair.second.LeftCalfBone, component_to_world);
-			Vector3 vLeftFoot = CalcMatrix(pair.second.LeftFootBone, component_to_world);
-			Vector3 vRightFoot = CalcMatrix(pair.second.RightFootBone, component_to_world);
-
-			Vector3 vHeadBoneOut = Head2D;
-			Vector3 vHipOut = ProjectWorldToScreen(vHip);
-			Vector3 vNeckOut = ProjectWorldToScreen(vNeck);
-			Vector3 vUpperArmLeftOut = ProjectWorldToScreen(vUpperArmLeft);
-			Vector3 vUpperArmRightOut = ProjectWorldToScreen(vUpperArmRight);
-			Vector3 vLeftHandOut = ProjectWorldToScreen(vLeftHand);
-			Vector3 vRightHandOut = ProjectWorldToScreen(vRightHand);
-			Vector3 vLeftHandOut1 = ProjectWorldToScreen(vLeftHand1);
-			Vector3 vRightHandOut1 = ProjectWorldToScreen(vRightHand1);
-			Vector3 vRightThighOut = ProjectWorldToScreen(vRightThigh);
-			Vector3 vLeftThighOut = ProjectWorldToScreen(vLeftThigh);
-			Vector3 vRightCalfOut = ProjectWorldToScreen(vRightCalf);
-			Vector3 vLeftCalfOut = ProjectWorldToScreen(vLeftCalf);
-			Vector3 vLeftFootOut = ProjectWorldToScreen(vLeftFoot);
-			Vector3 vRightFootOut = ProjectWorldToScreen(vRightFoot);
-
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vNeckOut.x, vNeckOut.y), ImVec2(vHeadBoneOut.x, vHeadBoneOut.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vHipOut.x, vHipOut.y), ImVec2(vNeckOut.x, vNeckOut.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vUpperArmLeftOut.x, vUpperArmLeftOut.y), ImVec2(vNeckOut.x, vNeckOut.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vUpperArmRightOut.x, vUpperArmRightOut.y), ImVec2(vNeckOut.x, vNeckOut.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vLeftHandOut.x, vLeftHandOut.y), ImVec2(vUpperArmLeftOut.x, vUpperArmLeftOut.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vRightHandOut.x, vRightHandOut.y), ImVec2(vUpperArmRightOut.x, vUpperArmRightOut.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vLeftHandOut.x, vLeftHandOut.y), ImVec2(vLeftHandOut1.x, vLeftHandOut1.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vRightHandOut.x, vRightHandOut.y), ImVec2(vRightHandOut1.x, vRightHandOut1.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vLeftThighOut.x, vLeftThighOut.y), ImVec2(vHipOut.x, vHipOut.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vRightThighOut.x, vRightThighOut.y), ImVec2(vHipOut.x, vHipOut.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vLeftCalfOut.x, vLeftCalfOut.y), ImVec2(vLeftThighOut.x, vLeftThighOut.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vRightCalfOut.x, vRightCalfOut.y), ImVec2(vRightThighOut.x, vRightThighOut.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vLeftFootOut.x, vLeftFootOut.y), ImVec2(vLeftCalfOut.x, vLeftCalfOut.y), colSK, tk);
-			ImGui::GetBackgroundDrawList()->AddLine(ImVec2(vRightFootOut.x, vRightFootOut.y), ImVec2(vRightCalfOut.x, vRightCalfOut.y), colSK, tk);
-			*/
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.Neck2D.x, player.Neck2D.y), ImVec2(player.Head2D.x, player.Head2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.Hip2D.x, player.Hip2D.y), ImVec2(player.Neck2D.x, player.Neck2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.UpperArmLeft2D.x, player.UpperArmLeft2D.y), ImVec2(player.Neck2D.x, player.Neck2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.UpperArmRight2D.x, player.UpperArmRight2D.y), ImVec2(player.Neck2D.x, player.Neck2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.LeftHand2D.x, player.LeftHand2D.y), ImVec2(player.UpperArmLeft2D.x, player.UpperArmLeft2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.RightHand2D.x, player.RightHand2D.y), ImVec2(player.UpperArmRight2D.x, player.UpperArmRight2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.LeftHand2D.x, player.LeftHand2D.y), ImVec2(player.LeftHandT2D.x, player.LeftHandT2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.RightHand2D.x, player.RightHand2D.y), ImVec2(player.RightHandT2D.x, player.RightHandT2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.LeftThigh2D.x, player.LeftThigh2D.y), ImVec2(player.Hip2D.x, player.Hip2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.RightThigh2D.x, player.RightThigh2D.y), ImVec2(player.Hip2D.x, player.Hip2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.LeftCalf2D.x, player.LeftCalf2D.y), ImVec2(player.LeftThigh2D.x, player.LeftThigh2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.RightCalf2D.x, player.RightCalf2D.y), ImVec2(player.RightThigh2D.x, player.RightThigh2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.LeftFoot2D.x, player.LeftFoot2D.y), ImVec2(player.LeftCalf2D.x, player.LeftCalf2D.y), colSK, tk);
+				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.RightFoot2D.x, player.RightFoot2D.y), ImVec2(player.RightCalf2D.x, player.RightCalf2D.y), colSK, tk);
+			}
+			
 
 		}
 	}

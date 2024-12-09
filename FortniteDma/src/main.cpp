@@ -1,3 +1,9 @@
+
+// dont move
+#include "kmbox/kmboxNet.h"
+#include "kmbox/HidTable.h"
+//
+
 #include <Windows.h>
 #include <dwmapi.h>
 #include <d3d11.h>
@@ -24,35 +30,39 @@
 #include "cheat/cheat.h"
 #include "cheat/esp.h"
 
-struct feature {
-	void (*func)();
-	__int64 lasttime;
-	__int64 period;
-};
-
 vector<feature> memoryList;
 vector<feature> mainList;
 
-int on_initialize() {
+void memRefreshLight() {
+	//auto start = std::chrono::high_resolution_clock::now();
+	mem.RefreshLight();
+	//__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+	//std::cout << "took -> " << elapsed << "ms" << std::endl;
+}
+
+bool on_initialize() {
 
 	string port = find_port("USB-SERIAL CH340");
 
 	if (!port.empty()) {
 
 		if (open_port(hSerial, port.c_str(), CBR_115200)) {
-			std::cout << hue::green << "[+] " << hue::white << "serial kmbox found" << std::endl;
+			std::cout << hue::green << "[+] " << hue::white << "Serial kmbox found" << std::endl;
 			settings::SerialKmbox = true;
 		}
 		else
 		{
-			std::cout << hue::yellow << "[/] " << hue::white << "couldnt connect to serial kmbox" << std::endl;
+			std::cout << hue::yellow << "[/] " << hue::white << "Couldnt connect to serial kmbox" << std::endl;
 		}
 	}
 	else {
-		std::cout << hue::yellow << "[/] " << hue::white << "no serial kmbox found" << std::endl;
+		std::cout << hue::yellow << "[/] " << hue::white << "No serial kmbox found" << std::endl;
 	}
 	
-	mem.Init(L"FortniteClient-Win64-Shipping.exe", settings::dma::MemoryMap); // make this return a bool and not just exit if an error happens
+	if (mem.Init(L"FortniteClient-Win64-Shipping.exe", settings::dma::MemoryMap) < 0) {
+		std::cout << hue::red << "[!] " << hue::white << "Failed to initialize" << std::endl;
+		return false;
+	}
 
 	bool fixedDtb = false;
 	for (int i = 0; i < 5 && !fixedDtb; i++) {
@@ -60,45 +70,46 @@ int on_initialize() {
 			fixedDtb = true;
 	}
 
+	std::cout << "\n";
+
 	if (!fixedDtb) {
 		std::cout << hue::red << "[!] " << hue::white << "Failed to fix dtb" << std::endl;
-		return 1;
+		return false;
 	}
 
 	mem.cachePML4();
 
 	if (!mem.SCreate()) {
 		std::cout << hue::red << "[!] " << hue::white << "Failed to initialize all handles" << std::endl;
-		return 1;
+		return false;
 	}
 
 	point::Base = mem.GetBaseAddress();
 	if (!point::Base)
 	{
 		std::cout << hue::red << "[!] " << hue::white << "Failed to get base address" << std::endl;
-		return 1;
+		return false;
 	}
 	
 	if (!mem.InitKeyboard()) 
 	{
 		std::cout << hue::red << "[!] " << hue::white << "Failed to initialize keyboard hotkeys" << std::endl;
-		return 1;
+		return false;
 	}
-
-
-	////Register features
-	//feature Aimbot = {aim,1,1000};
-	//featurelist.push_back(Aimbot);
 
 	if (!update_va_text()) {
 		std::cout << hue::red << "[!] " << hue::white << "Failed to get text_va" << std::endl;
-		return 1;
+		return false;
 	}
 
 	// memory features
 	{
+		// refresh memory MID PRIORITY
+		feature RefreshLight = { memRefreshLight , 1, 5000 };
+		memoryList.push_back(RefreshLight);
+
 		// update uworld and basics LOW PRIORITY
-		feature GDataUpdate = { newInfo , 1, 5000 };
+		feature GDataUpdate = { newInfo , 1, 2000 };
 		memoryList.push_back(GDataUpdate);
 
 		// update player list MID PRIORITY
@@ -116,11 +127,16 @@ int on_initialize() {
 
 	// main thread features
 	{
-		// something in the future
-		// aim maybe? if it doesnt have its own thread
+		// esp
+		feature Walls = { esp::renderPlayers, 1, 0 };
+		mainList.push_back(Walls);
+
+		// health checks (not many)
+		feature healthCheck = { healthChecks, 1, 100 };
+		mainList.push_back(healthCheck);
 	}
 
-	return 0;
+	return true;
 }
 
 void on_exit() {
@@ -134,6 +150,13 @@ void on_exit() {
 }
 
 void memoryloop() {
+
+	if (settings::runtime::criticalPriority) {
+		// set thread priority
+		if (!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
+			std::cout << hue::yellow << "[/] " << hue::white << "Failed to set critical priority to memory thread" << std::endl;
+	}
+
 	// never quit?
 	while (true) {
 		auto start = std::chrono::high_resolution_clock::now();
@@ -164,8 +187,6 @@ void mainloop() {
 	// cant toogle menu rn
 	menu::Menu();
 
-	esp::renderPlayers();
-
 	mainFeatures();
 
 	return;
@@ -180,12 +201,18 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 		freopen("CONOUT$", "w", stdout);
 		freopen("CONOUT$", "w", stderr);
 	}
+
+	if (settings::runtime::criticalPriority) {
+		// set thread priority
+		if (!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
+			std::cout << hue::yellow << "[/] " << hue::white << "Failed to set critical priority to main thread" << std::endl;
+	}
 	
 	if (!settings::runtime::graphicsOnly) {
-		int initialized = on_initialize();
-		if (initialized != 0) {
+		if (!on_initialize()) {
+			std::cout << hue::yellow << "[/] " << hue::white << "Press enter to exit" << std::endl;
 			std::cin.get();
-			return initialized;
+			return 1;
 		}
 
 		thread memoryThread(memoryloop);

@@ -23,6 +23,11 @@ struct Info {
 	uint64_t kernelAddr;
 	std::string name;
 };
+
+void clearLine() {
+	std::cout << "                                                                                                                \r" << std::flush;
+}
+
 //Directory Table Base requires: symsrv.dll, dbghelp.dll and info.db
 bool DMAHandler::FixDTB()
 {
@@ -33,10 +38,11 @@ bool DMAHandler::FixDTB()
 		return true; //Doesn't need to be patched lol
 
 	if (!VMMDLL_InitializePlugins(this->DMA_HANDLE)) {
+		std::cout << hue::yellow << "[/] " << hue::white << "Failed to initialize vmmdll plugins\r" << std::flush;
 		return false;
 	}
 
-	SetConsoleTitleA("(fixing dtb.. step 1)");
+	std::cout << hue::green << "[+] " << hue::white << "Initializing vmmdll plugins..\r" << std::flush;
 
 	//have to sleep a little or we try reading the file before the plugin initializes fully
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -50,14 +56,12 @@ bool DMAHandler::FixDTB()
 
 		if (nt == VMMDLL_STATUS_SUCCESS) {
 			std::string content(reinterpret_cast<char*>(bytes));
-
-			SetConsoleTitleA(("(fixing dtb.. step 1 " + content + "% )").c_str());
+			clearLine();
+			std::cout << hue::green << "[+] " << hue::white << "Initializing vmmdll plugins.. (" << content << "%)\r" << std::flush;
 		}
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
-
-	SetConsoleTitleA("(fixing dtb.. step 2)");
 
 	VMMDLL_VFS_FILELIST2 VfsFileList;
 	VfsFileList.dwVersion = VMMDLL_VFS_FILELIST_VERSION;
@@ -69,8 +73,6 @@ bool DMAHandler::FixDTB()
 	if (!result)
 		return false;
 
-	SetConsoleTitleA("(fixing dtb.. step 3)");
-
 	//read the data from the txt and parse it
 	const size_t buffer_size = cbSize;
 	BYTE* bytes = new BYTE[buffer_size];
@@ -81,7 +83,8 @@ bool DMAHandler::FixDTB()
 		return false;
 	}
 
-	SetConsoleTitleA("(fixing dtb.. step 4)");
+	clearLine();
+	std::cout << hue::green << "[+] " << hue::white << "Recovering possible dtb's..\r" << std::flush;
 
 	std::vector<uint64_t> possibleDTBs;
 	char* pLineStart = reinterpret_cast<char*>(bytes);
@@ -105,7 +108,8 @@ bool DMAHandler::FixDTB()
 		pLineStart = pLineEnd + 1;
 	}
 
-	SetConsoleTitleA("(fixing dtb.. step 5)");
+	clearLine();
+	std::cout << hue::green << "[+] " << hue::white << "Trying possible dtb's..\r" << std::flush;
 
 	//loop over possible dtbs and set the config to use it til we find the correct one
 	for (size_t i = 0; i < possibleDTBs.size(); i++) {
@@ -115,7 +119,8 @@ bool DMAHandler::FixDTB()
 		bool result = VMMDLL_Map_GetModuleFromNameU(this->DMA_HANDLE, this->GetPID(), (LPSTR)this->GameName.c_str(), &moduleEntry, NULL);
 		if (result) {
 			delete[] bytes;
-			SetConsoleTitleA("(dtb fixed)");
+			clearLine();
+			std::cout << hue::green << "[+] " << hue::white << "Correct dtb found\r" << std::flush;
 			processInfo.dtb = dtb;
 			return true;
 		}
@@ -172,7 +177,7 @@ void DMAHandler::retrieveScatter(VMMDLL_SCATTER_HANDLE handle, void* buffer, voi
 		log("Scatter read for %p failed partly or full! Bytes written: %d/%d", target, bytesRead, size);
 }
 
-void DMAHandler::Init(const wchar_t* wname, bool memMap)
+int DMAHandler::Init(const wchar_t* wname, bool memMap)
 {
 
 	WGameName = wname;
@@ -187,35 +192,32 @@ void DMAHandler::Init(const wchar_t* wname, bool memMap)
 
 		if (!modules.VMM)
 		{
-			std::printf("ERROR: could not load vmm.dll");
-			Sleep(5000);
-			exit(1);
+			std::cout << hue::red << "[!] " << hue::white << "Could not load vmm.dll" << std::endl;
+			return -1;
 		}
 
 		if (!modules.VMM)
 		{
-			std::printf("ERROR: could not load FTD3XX.dll");
-			Sleep(5000);
-			exit(1);
+			std::cout << hue::red << "[!] " << hue::white << "Could not load FTD3XX.dll" << std::endl;
+			return -1;
 		}
 
 		if (!modules.VMM)
 		{
-			std::printf("ERROR: could not load leechcore.dll");
-			Sleep(5000);
-			exit(1);
+			std::cout << hue::red << "[!] " << hue::white << "Could not load leechcore.dll" << std::endl;
+			return -1;
 		}
 
-		LPCSTR args[] = { (LPCSTR)"", (LPCSTR)"-device", (LPCSTR)"fpga", (LPCSTR)"", (LPCSTR)"" };
-		DWORD argc = 3;
+		LPCSTR args[] = { (LPCSTR)"", (LPCSTR)"-device", (LPCSTR)"fpga", (LPCSTR)"-norefresh", (LPCSTR)""};
+		DWORD argc = 4;
 
 
 		if (memMap)
 		{
 			if (!DumpMemoryMap())
 			{
-				std::printf("ERROR: Could not dump memory map!");
-				std::printf("Defaulting to no memory map!");
+				std::cout << hue::yellow << "[/] " << hue::white << "Failed to dump memory" << std::endl;
+				return 1;
 			}
 			else
 			{
@@ -233,10 +235,10 @@ void DMAHandler::Init(const wchar_t* wname, bool memMap)
 		DMA_HANDLE = VMMDLL_Initialize(argc, args);
 		if (!DMA_HANDLE)
 		{
-			std::printf("ERROR: Failed to connect to fpga device!");
-			Sleep(5000);
-			exit(1);
+			std::cout << hue::red << "[!] " << hue::white << "Failed to connect to fpga device" << std::endl;
+			return -1;
 		}
+
 
 		ULONG64 FPGA_ID, DEVICE_ID;
 
@@ -252,13 +254,18 @@ void DMAHandler::Init(const wchar_t* wname, bool memMap)
 	processInfo.wname = wname;
 	if (!VMMDLL_PidGetFromName(DMA_HANDLE, const_cast<char*>(processInfo.name.c_str()), &processInfo.pid))
 	{
-		std::printf("ERROR: %s not found!", processInfo.name.c_str());
-		Sleep(5000);
-		exit(1);
+		std::cout << hue::red << "[!] " << hue::white << "Failed to find game" << std::endl;
+		return -1;
 	}
 	else
 		PROCESS_INITIALIZED = TRUE;
 
+}
+
+void DMAHandler::RefreshLight() {
+	VMMDLL_ConfigSet(DMA_HANDLE, VMMDLL_OPT_REFRESH_FREQ_MEM_PARTIAL, 1);
+	VMMDLL_ConfigSet(DMA_HANDLE, VMMDLL_OPT_REFRESH_FREQ_TLB_PARTIAL, 1);
+	//VMMDLL_ConfigSet(DMA_HANDLE, VMMDLL_OPT_REFRESH_FREQ_FAST, 1);
 }
 
 bool DMAHandler::DumpMemoryMap()

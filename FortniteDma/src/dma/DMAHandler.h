@@ -149,8 +149,9 @@ public:
 	 * \param wname process name
 	 * \param memMap whether the memory map should get dumped to file.
 	 */
-	void Init(const wchar_t* wname, bool memMap = true);
+	int Init(const wchar_t* wname, bool memMap = true);
 	bool FixDTB();
+	void RefreshLight();
 
 	// Whether the DMA and Process are initialized
 	bool IsInitialized() const;
@@ -163,28 +164,6 @@ public:
 
 	ULONG64 GetModuleAddress(std::wstring modulename);
 	void Read(ULONG64 address, ULONG64 buffer, SIZE_T size);
-
-	bool prepareGetKey(const char* winlogonStr, const char* gafStr)
-	{
-		VMMDLL_PidGetFromName(DMA_HANDLE, (LPSTR)winlogonStr, &winlogonPid);
-
-		winlogonPid |= 0x80000000;
-
-		gafAsyncKeyStateBase = VMMDLL_ProcessGetProcAddressU(DMA_HANDLE, winlogonPid, (LPSTR)"win32kbase.sys", (LPSTR)gafStr);
-
-		return gafAsyncKeyStateBase;
-	}
-
-	bool getKey(uint8_t vkKey)
-	{
-		std::array<uint8_t, 64> data;
-
-		if (VMMDLL_MemReadEx(DMA_HANDLE, winlogonPid, gafAsyncKeyStateBase, PBYTE(&data), sizeof(std::array<uint8_t, 64>), 0, VMMDLL_FLAG_NOCACHE)) {
-			key_state = data;
-		}
-
-		return isKeyDown(key_state, vkKey);
-	}
 
 	void cachePML4()
 	{
@@ -206,34 +185,26 @@ public:
 			std::cout << hue::red << "[!] " << hue::white << "Failed to create scatter handle 1" << std::endl;
 			return false;
 		}
-		else {
-			std::cout << hue::green << "[+] " << hue::white << "Scatter handle 1 Created" << std::endl;
-		}
 
 		hS2 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, 1);
 		if (hS2 == NULL) {
 			std::cout << hue::red << "[!] " << hue::white << "Failed to create scatter handle 2" << std::endl;
 			return false;
 		}
-		else {
-			std::cout << hue::green << "[+] " << hue::white << "Scatter handle 2 Created" << std::endl;
-		}
+
 		hS3 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, 1);
 		if (hS3 == NULL) {
 			std::cout << hue::red << "[!] " << hue::white << "Failed to create scatter handle 3" << std::endl;
 			return false;
 		}
-		else {
-			std::cout << hue::green << "[+] " << hue::white << "Scatter handle 3 Created" << std::endl;
-		}
+
 		hS4 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, 1);
 		if (hS4 == NULL) {
 			std::cout << hue::red << "[!] " << hue::white << "Failed to create scatter handle 4" << std::endl;
 			return false;
 		}
-		else {
-			std::cout << hue::green << "[+] " << hue::white << "Scatter handle 4 Created" << std::endl;
-		}
+
+		std::cout << hue::green << "[+] " << hue::white << "Scatter handles Created" << std::endl;
 
 		return true;
 	}

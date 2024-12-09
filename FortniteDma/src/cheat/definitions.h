@@ -271,8 +271,8 @@ struct PlayerCache {
 	FTransform UpperArmRightBone{}; // 38
 	FTransform LeftHandBone{}; // 10
 	FTransform RightHandBone{}; // 39
-	FTransform LeftHand1Bone{}; // 11
-	FTransform RightHand1Bone{}; // 40
+	FTransform LeftHandTBone{}; // 11
+	FTransform RightHandTBone{}; // 40
 	FTransform RightThighBone{}; // 78
 	FTransform LeftThighBone{}; // 71
 	FTransform RightCalfBone{}; // 79
@@ -286,9 +286,39 @@ struct PlayerCache {
 	Vector3 Head3D{};
 	Vector3 Bottom3D{};
 
+	Vector3 Hip3D{};
+	Vector3 Neck3D{};
+	Vector3 UpperArmLeft3D{};
+	Vector3 UpperArmRight3D{};
+	Vector3 LeftHand3D{};
+	Vector3 RightHand3D{};
+	Vector3 LeftHandT3D{};
+	Vector3 RightHandT3D{};
+	Vector3 RightThigh3D{};
+	Vector3 LeftThigh3D{};
+	Vector3 RightCalf3D{};
+	Vector3 LeftCalf3D{};
+	Vector3 LeftFoot3D{};
+	Vector3 RightFoot3D{};
+
 	// screen
 	Vector3 Head2D{};
 	Vector3 Bottom2D{};
+
+	Vector3 Hip2D{};
+	Vector3 Neck2D{};
+	Vector3 UpperArmLeft2D{};
+	Vector3 UpperArmRight2D{};
+	Vector3 LeftHand2D	{};
+	Vector3 RightHand2D{};
+	Vector3 LeftHandT2D{};
+	Vector3 RightHandT2D{};
+	Vector3 RightThigh2D{};
+	Vector3 LeftThigh2D{};
+	Vector3 RightCalf2D{};
+	Vector3 LeftCalf2D{};
+	Vector3 LeftFoot2D{};
+	Vector3 RightFoot2D{};
 
 };
 

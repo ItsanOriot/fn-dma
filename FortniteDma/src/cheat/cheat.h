@@ -19,6 +19,11 @@ bool update_va_text() {
 
 void newInfo()
 {
+	auto start = std::chrono::high_resolution_clock::now();
+
+	if (!settings::cheat::GData)
+		goto END;
+
 	if (point::Uworld || point::GameInstance || point::GameState) {
 
 		mem.SClear(mem.hS);
@@ -102,9 +107,10 @@ void newInfo()
 
 	}
 	else {
+
 		point::Uworld = mem.Read<uintptr_t>(point::va_text + offsets::Uworld);
 
-		if (!point::Uworld) return;
+		if (!point::Uworld) goto END;
 
 		mem.SClear(mem.hS);
 
@@ -123,15 +129,15 @@ void newInfo()
 		point::PersistentLevel = mem.SReads<uintptr_t>(mem.hS, point::Uworld + offsets::PersistentLevel);
 		point::GameState = mem.SReads<uintptr_t>(mem.hS, point::Uworld + offsets::GameState);
 
-		if (!point::GameState) return;
+		if (!point::GameState) goto END;
 
 		if (point::GameInstance) point::LocalPlayers = mem.Read<uintptr_t>(point::GameInstance + offsets::LocalPlayers);
 
-		if (!point::LocalPlayers) return;
+		if (!point::LocalPlayers) goto END;
 
 		point::LocalPlayer = mem.Read<uintptr_t>(point::LocalPlayers);
 
-		if (!point::LocalPlayer) return;
+		if (!point::LocalPlayer) goto END;
 
 		point::PlayerController = mem.Read<uintptr_t>(point::LocalPlayer + offsets::PlayerController);
 
@@ -146,13 +152,24 @@ void newInfo()
 
 		if (point::PlayerState) local_player::localTeam = mem.Read<uint32_t>(point::PlayerState + offsets::TeamId);
 	}
+
+END:
+
+__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+stats::GDataData.addValue(static_cast<float>(elapsed));
+
 }
 
 void updateCamera()
 {
+	auto start = std::chrono::high_resolution_clock::now();
+
+	if (!settings::cheat::Camera)
+		goto END;
+
 	// check if we can update the camera
 	if (!point::RotationPointer || !point::LocationPointer || !point::LocalPlayer)
-		return;
+		goto END;
 
 	FNRot rotation;
 
@@ -178,13 +195,29 @@ void updateCamera()
 	// fix rotation ?
 	mainCamera.Rotation.x = asin(rotation.c) * (180.0 / M_PI);
 	mainCamera.Rotation.y = atan2(rotation.a * -1, rotation.b) * (180.0 / M_PI);
+
+END:
+
+	__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+	stats::updateCameraData.addValue(static_cast<float>(elapsed));
 }
 
 void updatePlayerList()
 {
-	// check if we can update players
-	if (!point::Uworld && !point::GameState && !point::PlayerArray.data)
+	auto start = std::chrono::high_resolution_clock::now();
+
+	if (!settings::cheat::PlayerList) {
+		__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+		stats::updatePlayerListData.addValue(static_cast<float>(elapsed));
 		return;
+	}
+
+	// check if we can update players
+	if (!point::Uworld && !point::GameState && !point::PlayerArray.data && point::PlayerArray.count > 0 && point::PlayerArray.count < 150) {
+		__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+		stats::updatePlayerListData.addValue(static_cast<float>(elapsed));
+		return;
+	}
 
 	// we will save the data used for this update (so they dont change while we are using them)
 	tarray playerArray = point::PlayerArray;
@@ -320,8 +353,8 @@ void updatePlayerList()
 			playersToAdd[i].UpperArmRightBone = mem.SReads<FTransform>(mem.hS3, it->second.BoneArray + (38 * 0x60));
 			playersToAdd[i].LeftHandBone = mem.SReads<FTransform>(mem.hS3, it->second.BoneArray + (10 * 0x60));
 			playersToAdd[i].RightHandBone = mem.SReads<FTransform>(mem.hS3, it->second.BoneArray + (39 * 0x60));
-			playersToAdd[i].LeftHand1Bone = mem.SReads<FTransform>(mem.hS3, it->second.BoneArray + (11 * 0x60));
-			playersToAdd[i].RightHand1Bone = mem.SReads<FTransform>(mem.hS3, it->second.BoneArray + (40 * 0x60));
+			playersToAdd[i].LeftHandTBone = mem.SReads<FTransform>(mem.hS3, it->second.BoneArray + (11 * 0x60));
+			playersToAdd[i].RightHandTBone = mem.SReads<FTransform>(mem.hS3, it->second.BoneArray + (40 * 0x60));
 			playersToAdd[i].RightThighBone = mem.SReads<FTransform>(mem.hS3, it->second.BoneArray + (78 * 0x60));
 			playersToAdd[i].LeftThighBone = mem.SReads<FTransform>(mem.hS3, it->second.BoneArray + (71 * 0x60));
 			playersToAdd[i].RightCalfBone = mem.SReads<FTransform>(mem.hS3, it->second.BoneArray + (79 * 0x60));
@@ -335,9 +368,39 @@ void updatePlayerList()
 				playersToAdd[i].Head3D = CalcMatrix(playersToAdd[i].HeadBone, playersToAdd[i].component_to_world);
 				playersToAdd[i].Bottom3D = CalcMatrix(playersToAdd[i].BottomBone, playersToAdd[i].component_to_world);
 
+				playersToAdd[i].Hip3D  = CalcMatrix(playersToAdd[i].HipBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].Neck3D  = CalcMatrix(playersToAdd[i].NeckBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].UpperArmLeft3D  = CalcMatrix(playersToAdd[i].UpperArmLeftBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].UpperArmRight3D  = CalcMatrix(playersToAdd[i].UpperArmRightBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].LeftHand3D  = CalcMatrix(playersToAdd[i].LeftHandBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].RightHand3D  = CalcMatrix(playersToAdd[i].RightHandBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].LeftHandT3D  = CalcMatrix(playersToAdd[i].LeftHandTBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].RightHandT3D  = CalcMatrix(playersToAdd[i].RightHandTBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].RightThigh3D  = CalcMatrix(playersToAdd[i].RightThighBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].LeftThigh3D  = CalcMatrix(playersToAdd[i].LeftThighBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].RightCalf3D  = CalcMatrix(playersToAdd[i].RightCalfBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].LeftCalf3D  = CalcMatrix(playersToAdd[i].LeftCalfBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].LeftFoot3D  = CalcMatrix(playersToAdd[i].LeftFootBone, playersToAdd[i].component_to_world);
+				playersToAdd[i].RightFoot3D = CalcMatrix(playersToAdd[i].RightFootBone, playersToAdd[i].component_to_world);
+
 				// and do world to screen
 				playersToAdd[i].Head2D = w2s(playersToAdd[i].Head3D);
 				playersToAdd[i].Bottom2D = w2s(playersToAdd[i].Bottom3D);
+
+				playersToAdd[i].Hip2D = w2s(playersToAdd[i].Hip3D);
+				playersToAdd[i].Neck2D = w2s(playersToAdd[i].Neck3D);
+				playersToAdd[i].UpperArmLeft2D = w2s(playersToAdd[i].UpperArmLeft3D);
+				playersToAdd[i].UpperArmRight2D = w2s(playersToAdd[i].UpperArmRight3D);
+				playersToAdd[i].LeftHand2D = w2s(playersToAdd[i].LeftHand3D);
+				playersToAdd[i].RightHand2D = w2s(playersToAdd[i].RightHand3D);
+				playersToAdd[i].LeftHandT2D = w2s(playersToAdd[i].LeftHandT3D);
+				playersToAdd[i].RightHandT2D = w2s(playersToAdd[i].RightHandT3D);
+				playersToAdd[i].RightThigh2D = w2s(playersToAdd[i].RightThigh3D);
+				playersToAdd[i].LeftThigh2D = w2s(playersToAdd[i].LeftThigh3D);
+				playersToAdd[i].RightCalf2D = w2s(playersToAdd[i].RightCalf3D);
+				playersToAdd[i].LeftCalf2D = w2s(playersToAdd[i].LeftCalf3D);
+				playersToAdd[i].LeftFoot2D = w2s(playersToAdd[i].LeftFoot3D);
+				playersToAdd[i].RightFoot2D = w2s(playersToAdd[i].RightFoot3D);
 			}
 		}
 
@@ -346,10 +409,21 @@ void updatePlayerList()
 			newCache[playersToAdd[i].PlayerState] = playersToAdd[i];
 		}
 	}
+
+END:
+
+	__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+	stats::updatePlayerListData.addValue(static_cast<float>(elapsed));
 }
 
 void updatePlayers()
 {
+	auto start = std::chrono::high_resolution_clock::now();
+
+	if (!settings::cheat::Players) {
+		goto END;
+	}
+
 	// are there any players
 	if (newCache.size() > 0) {
 		mem.SClear(mem.hS4);
@@ -400,8 +474,8 @@ void updatePlayers()
 				it->second.UpperArmRightBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (38 * 0x60));
 				it->second.LeftHandBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (10 * 0x60));
 				it->second.RightHandBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (39 * 0x60));
-				it->second.LeftHand1Bone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (11 * 0x60));
-				it->second.RightHand1Bone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (40 * 0x60));
+				it->second.LeftHandTBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (11 * 0x60));
+				it->second.RightHandTBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (40 * 0x60));
 				it->second.RightThighBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (78 * 0x60));
 				it->second.LeftThighBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (71 * 0x60));
 				it->second.RightCalfBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (79 * 0x60));
@@ -439,9 +513,39 @@ void updatePlayers()
 				it->second.Head3D = CalcMatrix(it->second.HeadBone, it->second.component_to_world);
 				it->second.Bottom3D = CalcMatrix(it->second.BottomBone, it->second.component_to_world);
 
+				it->second.Hip3D  = CalcMatrix(it->second.HipBone, it->second.component_to_world);
+				it->second.Neck3D  = CalcMatrix(it->second.NeckBone, it->second.component_to_world);
+				it->second.UpperArmLeft3D  = CalcMatrix(it->second.UpperArmLeftBone, it->second.component_to_world);
+				it->second.UpperArmRight3D  = CalcMatrix(it->second.UpperArmRightBone, it->second.component_to_world);
+				it->second.LeftHand3D  = CalcMatrix(it->second.LeftHandBone, it->second.component_to_world);
+				it->second.RightHand3D  = CalcMatrix(it->second.RightHandBone, it->second.component_to_world);
+				it->second.LeftHandT3D  = CalcMatrix(it->second.LeftHandTBone, it->second.component_to_world);
+				it->second.RightHandT3D  = CalcMatrix(it->second.RightHandTBone, it->second.component_to_world);
+				it->second.RightThigh3D  = CalcMatrix(it->second.RightThighBone, it->second.component_to_world);
+				it->second.LeftThigh3D  = CalcMatrix(it->second.LeftThighBone, it->second.component_to_world);
+				it->second.RightCalf3D  = CalcMatrix(it->second.RightCalfBone, it->second.component_to_world);
+				it->second.LeftCalf3D  = CalcMatrix(it->second.LeftCalfBone, it->second.component_to_world);
+				it->second.LeftFoot3D  = CalcMatrix(it->second.LeftFootBone, it->second.component_to_world);
+				it->second.RightFoot3D = CalcMatrix(it->second.RightFootBone, it->second.component_to_world);
+
 				// and do world to screen
 				it->second.Head2D = w2s(it->second.Head3D);
 				it->second.Bottom2D = w2s(it->second.Bottom3D);
+
+				it->second.Hip2D = w2s(it->second.Hip3D);
+				it->second.Neck2D = w2s(it->second.Neck3D);
+				it->second.UpperArmLeft2D = w2s(it->second.UpperArmLeft3D);
+				it->second.UpperArmRight2D = w2s(it->second.UpperArmRight3D);
+				it->second.LeftHand2D = w2s(it->second.LeftHand3D);
+				it->second.RightHand2D = w2s(it->second.RightHand3D);
+				it->second.LeftHandT2D = w2s(it->second.LeftHandT3D);
+				it->second.RightHandT2D = w2s(it->second.RightHandT3D);
+				it->second.RightThigh2D = w2s(it->second.RightThigh3D);
+				it->second.LeftThigh2D = w2s(it->second.LeftThigh3D);
+				it->second.RightCalf2D = w2s(it->second.RightCalf3D);
+				it->second.LeftCalf2D = w2s(it->second.LeftCalf3D);
+				it->second.LeftFoot2D = w2s(it->second.LeftFoot3D);
+				it->second.RightFoot2D = w2s(it->second.RightFoot3D);
 			}
 
 			++it;
@@ -449,4 +553,15 @@ void updatePlayers()
 	}
 
 	readyCache = newCache;
+
+END:
+
+	__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+	stats::updatePlayersData.addValue(static_cast<float>(elapsed));
+}
+
+void healthChecks() {
+	
+	// future
+
 }
