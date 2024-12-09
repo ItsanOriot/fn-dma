@@ -27,8 +27,8 @@ namespace offsets {
 	uintptr_t AActorArray = 0x128;
 	uintptr_t AActorCount = AActorArray + 8;
 	uintptr_t ComponetToWorld = 0x1E0;
-	uintptr_t LastSubmitTime = 0x2F0;
-	uintptr_t LastRenderTimeOnScreen = LastSubmitTime + 4;
+	uintptr_t Seconds = 0x140; // UWorld + 0x140
+	uintptr_t LastRenderTime = 0x30C;
 	uintptr_t BoneArray = 0x5A8;
 	uintptr_t Velocity = 0x180;
 	uintptr_t Kills = 0x1274; //AFortPlayerStateAthena.KillScore: 0x1274

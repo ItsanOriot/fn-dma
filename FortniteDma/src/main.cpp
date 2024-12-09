@@ -6,6 +6,7 @@
 #include "console/console.h"
 
 #include "settings.h"
+#include "performance.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_dx11.h>
@@ -20,22 +21,8 @@
 #include "dma/DMAHandler.h"
 #include "kmbox/kmbox_interface.h"
 
-inline void km_move(int X, int Y) {
-	std::string command = "km.move(" + std::to_string(X) + "," + std::to_string(Y) + ")\r\n";
-	send_command(hSerial, command.c_str());
-}
-
-inline void km_click(int clickDelay) {
-	std::string command = "km.click(0)\r\n";
-	send_command(hSerial, command.c_str());
-}
-
 #include "cheat/cheat.h"
 #include "cheat/esp.h"
-
-void aim() {
-
-}
 
 struct feature {
 	void (*func)();
@@ -138,22 +125,38 @@ int on_initialize() {
 
 void on_exit() {
 	CloseHandle(hSerial);
-	fclose(stdin);
-	fclose(stdout);
-	fclose(stderr);
+
+	if (!settings::runtime::headless) {
+		fclose(stdin);
+		fclose(stdout);
+		fclose(stderr);
+	}
 }
 
 void memoryloop() {
 	// never quit?
 	while (true) {
+		auto start = std::chrono::high_resolution_clock::now();
+
 		for (feature& i : memoryList) {
 			if ((chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count() - i.lasttime) >= i.period) {
 				i.lasttime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
 				i.func();
 			}
 		}
-	}
 
+		__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+		stats::memoryThreadData.addValue(static_cast<float>(elapsed));
+	}
+}
+
+void mainFeatures() {
+	for (feature& i : mainList) {
+		if ((chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count() - i.lasttime) >= i.period) {
+			i.lasttime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+			i.func();
+		}
+	}
 }
 
 void mainloop() {
@@ -163,12 +166,7 @@ void mainloop() {
 
 	esp::renderPlayers();
 
-	for (feature& i : mainList) {
-		if ((chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count() - i.lasttime) >= i.period) {
-			i.lasttime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
-			i.func();
-		}
-	}
+	mainFeatures();
 
 	return;
 }
@@ -176,27 +174,44 @@ void mainloop() {
 
 INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
-	AllocConsole();
-	freopen("CONIN$", "r", stdin);
-	freopen("CONOUT$", "w", stdout);
-	freopen("CONOUT$", "w", stderr);
+	if (!settings::runtime::headless) {
+		AllocConsole();
+		freopen("CONIN$", "r", stdin);
+		freopen("CONOUT$", "w", stdout);
+		freopen("CONOUT$", "w", stderr);
+	}
+	
+	if (!settings::runtime::graphicsOnly) {
+		int initialized = on_initialize();
+		if (initialized != 0) {
+			std::cin.get();
+			return initialized;
+		}
 
-	int initialized = on_initialize();
-	if (initialized != 0) {
-		std::cin.get();
-		return initialized;
+		thread memoryThread(memoryloop);
+		memoryThread.detach();
 	}
 
-	thread memoryThread(memoryloop);
-	memoryThread.detach();
+	// wanted to make it run without a window for debugging not sure if needed
+	if (!settings::runtime::windowless) {
+		InitWindow(instance, cmd_show);
 
-	InitWindow(instance, cmd_show);
+		while (UpdateWindow(mainloop)) {
 
-	while (UpdateWindow(mainloop)) {
+		}
 
+		DestroyWindow();
 	}
+	else {
+		while (true) {
+			auto start = std::chrono::high_resolution_clock::now();
 
-	DestroyWindow();
+			mainFeatures();
+
+			__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+			stats::mainThreadData.addValue(static_cast<float>(elapsed));
+		}
+	}
 
 	on_exit();
 	return 0;

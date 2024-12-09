@@ -280,7 +280,6 @@ struct PlayerCache {
 
 	FTransform component_to_world{};
 
-	float last_submit = 0;
 	float last_render = 0;
 };
 

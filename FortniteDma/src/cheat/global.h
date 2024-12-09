@@ -38,4 +38,7 @@ namespace point {
     inline uintptr_t PlayerCameraManager = 0;
     inline uintptr_t LocationPointer = 0;
     inline uintptr_t RotationPointer = 0;
+
+    // maybe move into main camera
+    inline double Seconds = 0; // for vischeck
 }

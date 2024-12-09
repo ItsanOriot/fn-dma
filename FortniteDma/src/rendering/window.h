@@ -71,8 +71,8 @@ bool InitWindow(HINSTANCE instance, INT cmd_show)
 	}
 
 	DXGI_SWAP_CHAIN_DESC sd{};
-	sd.BufferDesc.RefreshRate.Numerator = 144U;
-	sd.BufferDesc.RefreshRate.Denominator = 1U;
+	sd.BufferDesc.RefreshRate.Numerator = 0U;
+	sd.BufferDesc.RefreshRate.Denominator = 0U;
 	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	sd.SampleDesc.Count = 1U;
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -209,6 +209,8 @@ bool InitWindow(HINSTANCE instance, INT cmd_show)
 
 bool UpdateWindow(void (*mainfunc)()) {
 
+	auto start = std::chrono::high_resolution_clock::now();
+
 	MSG msg;
 	while (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE)) {
 		TranslateMessage(&msg);
@@ -233,7 +235,10 @@ bool UpdateWindow(void (*mainfunc)()) {
 
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-	swap_chain->Present(1U, 0U);
+	swap_chain->Present(0U, 0U);
+
+	__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+	stats::mainThreadData.addValue(static_cast<float>(elapsed));
 
 	return true;
 }

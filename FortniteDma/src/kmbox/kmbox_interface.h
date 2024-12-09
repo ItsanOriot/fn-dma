@@ -83,3 +83,13 @@ void send_command(HANDLE hSerial, const std::string& command) {
 	if (!WriteFile(hSerial, command.c_str(), command.length(), &bytesWritten, NULL)) {
 	}
 }
+
+inline void km_move(int X, int Y) {
+	std::string command = "km.move(" + std::to_string(X) + "," + std::to_string(Y) + ")\r\n";
+	send_command(hSerial, command.c_str());
+}
+
+inline void km_click(int clickDelay) {
+	std::string command = "km.click(0)\r\n";
+	send_command(hSerial, command.c_str());
+}

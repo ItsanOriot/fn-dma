@@ -12,7 +12,7 @@ namespace esp {
 			// valid?
 			if (!player.Mesh) continue;
 
-			bool IsVis = player.last_render + 0.06f >= player.last_submit;
+			bool IsVis = point::Seconds - player.last_render <= 0.06f;
 
 			bool IsBot = player.isBot & (1 << 3);
 

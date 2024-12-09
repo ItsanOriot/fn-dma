@@ -175,6 +175,7 @@
     <ClInclude Include="src\cheat\esp.h" />
     <ClInclude Include="src\cheat\global.h" />
     <ClInclude Include="src\cheat\offsets.h" />
+    <ClInclude Include="src\performance.h" />
     <ClInclude Include="src\cheat\utils.h" />
     <ClInclude Include="src\menu\menu.h" />
     <ClInclude Include="src\rendering\Font.h" />

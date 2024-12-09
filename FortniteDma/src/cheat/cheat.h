@@ -40,10 +40,6 @@ void newInfo()
 	point::PersistentLevel = mem.SReads<uintptr_t>(mem.hS, point::Uworld + offsets::PersistentLevel);
 	point::GameState = mem.SReads<uintptr_t>(mem.hS, point::Uworld + offsets::GameState);
 
-	//if (!point::GameInstance) return;
-
-	//if (!point::PersistentLevel) return;
-
 	if (!point::GameState) return;
 
 	if (point::GameInstance) point::LocalPlayers = mem.Read<uintptr_t>(point::GameInstance + offsets::LocalPlayers);
@@ -84,6 +80,9 @@ void updateCamera()
 	mem.SPrepare(mem.hS2, point::LocationPointer, sizeof(Vector3));
 	mem.SPrepare(mem.hS2, point::LocalPlayer + offsets::FieldOfView, sizeof(float));
 
+	// while we are at it update seconds for vischeck
+	mem.SPrepare(mem.hS2, point::Uworld + offsets::Seconds, sizeof(double));
+
 	mem.ExecuteMemoryReads(mem.hS2);
 
 	rotation = mem.SReads<FNRot>(mem.hS2, point::RotationPointer);
@@ -91,6 +90,8 @@ void updateCamera()
 	mainCamera.Location = mem.SReads<Vector3>(mem.hS2, point::LocationPointer);
 
 	mainCamera.FieldOfView = mem.SReads<float>(mem.hS2, point::LocalPlayer + offsets::FieldOfView);
+
+	point::Seconds = mem.SReads<double>(mem.hS2, point::Uworld + offsets::Seconds);
 
 	// fix rotation ?
 	mainCamera.Rotation.x = asin(rotation.c) * (180.0 / M_PI);
@@ -196,8 +197,7 @@ void updatePlayerList()
 			mem.SPrepare(mem.hS3, playersToAdd[i].Mesh + offsets::BoneArray, 0x18); // includes both
 			//mem.SPrepare(mem.hS3, playersToAdd[i].Mesh + offsets::BoneArray + 0x10, sizeof(uintptr_t));
 			mem.SPrepare(mem.hS3, playersToAdd[i].Mesh + offsets::ComponetToWorld, sizeof(FTransform));
-			mem.SPrepare(mem.hS3, playersToAdd[i].Mesh + offsets::LastSubmitTime, sizeof(float));
-			mem.SPrepare(mem.hS3, playersToAdd[i].Mesh + offsets::LastRenderTimeOnScreen, sizeof(float));
+			mem.SPrepare(mem.hS3, playersToAdd[i].Mesh + offsets::LastRenderTime, sizeof(float));
 			mem.SPrepare(mem.hS3, playersToAdd[i].RootComponent + offsets::Velocity, sizeof(Vector3));
 		}
 		mem.ExecuteMemoryReads(mem.hS3);
@@ -208,8 +208,7 @@ void updatePlayerList()
 			playersToAdd[i].BoneArray1 = mem.SReads<uintptr_t>(mem.hS3, playersToAdd[i].Mesh + offsets::BoneArray);
 			playersToAdd[i].BoneArray2 = mem.SReads<uintptr_t>(mem.hS3, playersToAdd[i].Mesh + offsets::BoneArray + 0x10);
 			playersToAdd[i].component_to_world = mem.SReads<FTransform>(mem.hS3, playersToAdd[i].Mesh + offsets::ComponetToWorld);
-			playersToAdd[i].last_submit = mem.SReads<float>(mem.hS3, playersToAdd[i].Mesh + offsets::LastSubmitTime);
-			playersToAdd[i].last_render = mem.SReads<float>(mem.hS3, playersToAdd[i].Mesh + offsets::LastRenderTimeOnScreen);
+			playersToAdd[i].last_render = mem.SReads<float>(mem.hS3, playersToAdd[i].Mesh + offsets::LastRenderTime);
 			playersToAdd[i].Velocity = mem.SReads<Vector3>(mem.hS3, playersToAdd[i].RootComponent + offsets::Velocity);
 		}
 
@@ -271,23 +270,30 @@ void updatePlayers()
 			uintptr_t BoneArray = it->second.BoneArray1;
 			if (!BoneArray) BoneArray = it->second.BoneArray2;
 
-			if (!BoneArray || !it->second.Mesh || !it->second.RootComponent || !it->second.Pawn) {
-				++it;
-				continue;
+			
+			if (BoneArray) {
+				mem.SPrepare(mem.hS4, BoneArray, (82 * 0x60) + sizeof(FTransform));
 			}
 
-			mem.SPrepare(mem.hS4, it->second.Mesh + offsets::BoneArray, 0x18); // includes both
-			//mem.SPrepare(mem.hS3, it->second.Mesh + offsets::BoneArray + 0x10, sizeof(uintptr_t));
+			if (it->second.Pawn) {
+				mem.SPrepare(mem.hS4, it->second.Pawn + offsets::Mesh, sizeof(uintptr_t));
+			}
 
-			mem.SPrepare(mem.hS4, BoneArray, (82 * 0x60) + sizeof(FTransform));
+			if (it->second.Mesh) {
+				mem.SPrepare(mem.hS4, it->second.Mesh + offsets::BoneArray, 0x18); // includes both
+				//mem.SPrepare(mem.hS3, it->second.Mesh + offsets::BoneArray + 0x10, sizeof(uintptr_t));
+				mem.SPrepare(mem.hS4, it->second.Mesh + offsets::ComponetToWorld, sizeof(FTransform));
+				mem.SPrepare(mem.hS4, it->second.Mesh + offsets::LastRenderTime, sizeof(float));
+			}
 
-			mem.SPrepare(mem.hS4, it->second.Mesh + offsets::ComponetToWorld, sizeof(FTransform));
-			mem.SPrepare(mem.hS4, it->second.Mesh + offsets::LastSubmitTime, sizeof(float));
-			mem.SPrepare(mem.hS4, it->second.Mesh + offsets::LastRenderTimeOnScreen, sizeof(float));
-			mem.SPrepare(mem.hS4, it->second.RootComponent + offsets::Velocity, sizeof(Vector3));
+			if (it->second.RootComponent) {
+				mem.SPrepare(mem.hS4, it->second.RootComponent + offsets::Velocity, sizeof(Vector3));
+			}
 
-			mem.SPrepare(mem.hS4, it->second.Pawn + offsets::isDying, sizeof(BYTE));
-			mem.SPrepare(mem.hS4, it->second.Pawn + offsets::IsDBNO, sizeof(BYTE));
+			if (it->second.Pawn) {
+				mem.SPrepare(mem.hS4, it->second.Pawn + offsets::isDying, sizeof(BYTE));
+				mem.SPrepare(mem.hS4, it->second.Pawn + offsets::IsDBNO, sizeof(BYTE));
+			}
 
 			++it;
 		}
@@ -300,38 +306,44 @@ void updatePlayers()
 			uintptr_t BoneArray = it->second.BoneArray1;
 			if (!BoneArray) BoneArray = it->second.BoneArray2;
 
-			if (!BoneArray || !it->second.Mesh || !it->second.RootComponent || !it->second.Pawn) {
-				++it;
-				continue;
+			if (BoneArray) {
+				it->second.HeadBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (68 * 0x60));
+				it->second.BottomBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (0 * 0x60));
+				it->second.NeckBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (66 * 0x60));
+				it->second.HipBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (2 * 0x60));
+				it->second.UpperArmLeftBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (9 * 0x60));
+				it->second.UpperArmRightBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (38 * 0x60));
+				it->second.LeftHandBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (10 * 0x60));
+				it->second.RightHandBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (39 * 0x60));
+				it->second.LeftHand1Bone = mem.SReads<FTransform>(mem.hS4, BoneArray + (11 * 0x60));
+				it->second.RightHand1Bone = mem.SReads<FTransform>(mem.hS4, BoneArray + (40 * 0x60));
+				it->second.RightThighBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (78 * 0x60));
+				it->second.LeftThighBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (71 * 0x60));
+				it->second.RightCalfBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (79 * 0x60));
+				it->second.LeftCalfBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (72 * 0x60));
+				it->second.LeftFootBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (75 * 0x60));
+				it->second.RightFootBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (82 * 0x60));
 			}
 
-			it->second.BoneArray1 = mem.SReads<uintptr_t>(mem.hS4, it->second.Mesh + offsets::BoneArray);
-			it->second.BoneArray2 = mem.SReads<uintptr_t>(mem.hS4, it->second.Mesh + offsets::BoneArray + 0x10);
+			if (it->second.Pawn) {
+				it->second.Mesh = mem.SReads<uintptr_t>(mem.hS3, it->second.Pawn + offsets::Mesh);
+			}
 
-			it->second.HeadBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (68 * 0x60));
-			it->second.BottomBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (0 * 0x60));
-			it->second.NeckBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (66 * 0x60));
-			it->second.HipBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (2 * 0x60));
-			it->second.UpperArmLeftBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (9 * 0x60));
-			it->second.UpperArmRightBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (38 * 0x60));
-			it->second.LeftHandBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (10 * 0x60));
-			it->second.RightHandBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (39 * 0x60));
-			it->second.LeftHand1Bone = mem.SReads<FTransform>(mem.hS4, BoneArray + (11 * 0x60));
-			it->second.RightHand1Bone = mem.SReads<FTransform>(mem.hS4, BoneArray + (40 * 0x60));
-			it->second.RightThighBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (78 * 0x60));
-			it->second.LeftThighBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (71 * 0x60));
-			it->second.RightCalfBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (79 * 0x60));
-			it->second.LeftCalfBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (72 * 0x60));
-			it->second.LeftFootBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (75 * 0x60));
-			it->second.RightFootBone = mem.SReads<FTransform>(mem.hS4, BoneArray + (82 * 0x60));
+			if (it->second.Mesh) {
+				it->second.BoneArray1 = mem.SReads<uintptr_t>(mem.hS4, it->second.Mesh + offsets::BoneArray);
+				it->second.BoneArray2 = mem.SReads<uintptr_t>(mem.hS4, it->second.Mesh + offsets::BoneArray + 0x10);
+				it->second.component_to_world = mem.SReads<FTransform>(mem.hS4, it->second.Mesh + offsets::ComponetToWorld);
+				it->second.last_render = mem.SReads<float>(mem.hS4, it->second.Mesh + offsets::LastRenderTime);
+			}
 
-			it->second.component_to_world = mem.SReads<FTransform>(mem.hS4, it->second.Mesh + offsets::ComponetToWorld);
-			it->second.last_submit = mem.SReads<float>(mem.hS4, it->second.Mesh + offsets::LastSubmitTime);
-			it->second.last_render = mem.SReads<float>(mem.hS4, it->second.Mesh + offsets::LastRenderTimeOnScreen);
-			it->second.Velocity = mem.SReads<Vector3>(mem.hS4, it->second.RootComponent + offsets::Velocity);
+			if (it->second.RootComponent) {
+				it->second.Velocity = mem.SReads<Vector3>(mem.hS4, it->second.RootComponent + offsets::Velocity);
+			}
 
-			it->second.isDying = mem.SReads<BYTE>(mem.hS4, it->second.Pawn + offsets::isDying);
-			it->second.isDBNO = mem.SReads<BYTE>(mem.hS4, it->second.Pawn + offsets::IsDBNO);
+			if (it->second.Pawn) {
+				it->second.isDying = mem.SReads<BYTE>(mem.hS4, it->second.Pawn + offsets::isDying);
+				it->second.isDBNO = mem.SReads<BYTE>(mem.hS4, it->second.Pawn + offsets::IsDBNO);
+			}
 
 			++it;
 		}
