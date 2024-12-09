@@ -1,3 +1,4 @@
+#include "../console/console.h"
 
 #include "DMAHandler.h"
 
@@ -211,7 +212,6 @@ void DMAHandler::Init(const wchar_t* wname, bool memMap)
 
 		if (memMap)
 		{
-			std::printf("dumping memory map to file...");
 			if (!DumpMemoryMap())
 			{
 				std::printf("ERROR: Could not dump memory map!");
@@ -219,7 +219,6 @@ void DMAHandler::Init(const wchar_t* wname, bool memMap)
 			}
 			else
 			{
-				std::printf("Dumped memory map!");
 				//Get Path to executable
 				char buffer[MAX_PATH];
 				GetModuleFileNameA(nullptr, buffer, MAX_PATH);
@@ -285,7 +284,6 @@ bool DMAHandler::DumpMemoryMap()
 			nFile.close();
 
 			VMMDLL_MemFree(pPhysMemMap);
-			log("Successfully dumped memory map to file!");
 			//Little sleep to make sure it's written to file.
 			Sleep(3000);
 		}

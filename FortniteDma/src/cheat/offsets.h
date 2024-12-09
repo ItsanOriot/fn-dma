@@ -14,6 +14,7 @@ namespace offsets {
 	uintptr_t PersistentLevel = 0x38;
 	uintptr_t OwningWorld = 0xc8;
 	uintptr_t LocalPlayers = 0x38;
+	uintptr_t FieldOfView = 0x4AC; // point::LocalPlayer + 0x4AC
 	uintptr_t PlayerController = 0x30;
 	uintptr_t LocalPawn = 0x350;
 	uintptr_t Cameramanager = 0x348;

@@ -203,36 +203,36 @@ public:
 	{
 		hS = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, 1);
 		if (hS == NULL) {
-			std::cerr << "FAIL: VMMDLL_SCATTER_HANDLE\n";
+			std::cout << hue::red << "[!] " << hue::white << "Failed to create scatter handle 1" << std::endl;
 			return false;
 		}
 		else {
-			std::cout << "SUCCESS: VMMDLL_SCATTER_HANDLE\n";
+			std::cout << hue::green << "[+] " << hue::white << "Scatter handle 1 Created" << std::endl;
 		}
 
 		hS2 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, 1);
 		if (hS2 == NULL) {
-			std::cerr << "FAIL: VMMDLL_SCATTER_HANDLE\n";
+			std::cout << hue::red << "[!] " << hue::white << "Failed to create scatter handle 2" << std::endl;
 			return false;
 		}
 		else {
-			std::cout << "SUCCESS: VMMDLL_SCATTER_HANDLE\n";
+			std::cout << hue::green << "[+] " << hue::white << "Scatter handle 2 Created" << std::endl;
 		}
 		hS3 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, 1);
 		if (hS3 == NULL) {
-			std::cerr << "FAIL: VMMDLL_SCATTER_HANDLE\n";
+			std::cout << hue::red << "[!] " << hue::white << "Failed to create scatter handle 3" << std::endl;
 			return false;
 		}
 		else {
-			std::cout << "SUCCESS: VMMDLL_SCATTER_HANDLE\n";
+			std::cout << hue::green << "[+] " << hue::white << "Scatter handle 3 Created" << std::endl;
 		}
 		hS4 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, 1);
 		if (hS4 == NULL) {
-			std::cerr << "FAIL: VMMDLL_SCATTER_HANDLE\n";
+			std::cout << hue::red << "[!] " << hue::white << "Failed to create scatter handle 4" << std::endl;
 			return false;
 		}
 		else {
-			std::cout << "SUCCESS: VMMDLL_SCATTER_HANDLE\n";
+			std::cout << hue::green << "[+] " << hue::white << "Scatter handle 4 Created" << std::endl;
 		}
 
 		return true;
@@ -240,7 +240,7 @@ public:
 
 	bool SPrepare(VMMDLL_SCATTER_HANDLE handle, uint64_t va, DWORD cb) {
 		if (!VMMDLL_Scatter_Prepare(handle, va, cb)) {
-			std::cout << "Scatter prepare failed." << std::endl;
+			//std::cout << "Scatter prepare failed." << std::endl;
 			return false;
 		}
 		return true;
@@ -248,7 +248,7 @@ public:
 
 	bool ExecuteMemoryReads(VMMDLL_SCATTER_HANDLE handle) {
 		if (!VMMDLL_Scatter_ExecuteRead(handle)) {
-			std::cout << "Scatter execute read failed." << std::endl;
+			//std::cout << "Scatter execute read failed." << std::endl;
 			return false;
 		}
 		return true;
@@ -259,10 +259,10 @@ public:
 		T buff;
 		DWORD pcbRead;
 		if (!VMMDLL_Scatter_Read(handle, ptr, sizeof(T), reinterpret_cast<PBYTE>(&buff), &pcbRead)) {
-			std::cout << "Scatter read failed." << std::endl;
+			//std::cout << "Scatter read failed." << std::endl;
 		}
 		if (pcbRead != sizeof(T)) {
-			std::cout << "Partial Scatter read." << std::endl;
+			//std::cout << "Partial Scatter read." << std::endl;
 		}
 		return buff;
 	}
@@ -271,10 +271,10 @@ public:
 	void SReadArray(VMMDLL_SCATTER_HANDLE handle, uint64_t ptr, T* buff, size_t size) {
 		DWORD pcbRead;
 		if (!VMMDLL_Scatter_Read(handle, ptr, size, reinterpret_cast<PBYTE>(buff), &pcbRead)) {
-			std::cout << "Scatter read failed." << std::endl;
+			//std::cout << "Scatter read failed." << std::endl;
 		}
 		if (pcbRead != size) {
-			std::cout << "Partial Scatter read." << std::endl;
+			//std::cout << "Partial Scatter read." << std::endl;
 		}
 	}
 
@@ -292,13 +292,15 @@ public:
 
 		return buffer;
 	}
-	void* ReadString(ULONG64 address, void* buf, uint64_t length)
+
+	void* ReadA(ULONG64 address, void* buf, uint64_t length)
 	{
 
 		Read(address, reinterpret_cast<ULONG64>(buf), length);
 
 		return buf;
 	}
+
 	template <typename T>
 	T Read(ULONG64 address)
 	{

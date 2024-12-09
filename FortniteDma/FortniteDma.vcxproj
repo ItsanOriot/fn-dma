@@ -157,6 +157,7 @@
     <ClCompile Include="external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\dma\DMAHandler.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\menu\menu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\imgui\imconfig.h" />
@@ -171,14 +172,19 @@
     <ClInclude Include="external\leechcore.h" />
     <ClInclude Include="external\vmmdll.h" />
     <ClInclude Include="src\cheat\cheat.h" />
+    <ClInclude Include="src\cheat\esp.h" />
     <ClInclude Include="src\cheat\global.h" />
     <ClInclude Include="src\cheat\offsets.h" />
-    <ClInclude Include="src\cheat\settings.h" />
-    <ClInclude Include="src\cheat\util.h" />
+    <ClInclude Include="src\cheat\utils.h" />
+    <ClInclude Include="src\menu\menu.h" />
+    <ClInclude Include="src\rendering\Font.h" />
+    <ClInclude Include="src\settings.h" />
+    <ClInclude Include="src\cheat\definitions.h" />
     <ClInclude Include="src\console\console.h" />
     <ClInclude Include="src\dma\DMAHandler.h" />
     <ClInclude Include="src\kmbox\kmbox.hpp" />
     <ClInclude Include="src\kmbox\kmbox_interface.h" />
+    <ClInclude Include="src\rendering\window.h" />
     <ClInclude Include="trashcan\Settings.hpp" />
     <ClInclude Include="trashcan\UnrealContainers.hpp" />
     <ClInclude Include="trashcan\Utils.hpp" />
