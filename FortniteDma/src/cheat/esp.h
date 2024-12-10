@@ -6,26 +6,30 @@ namespace esp {
 		// we make a copy of the cache we dont want modifications from elsewhere while using it
 		std::unordered_map<uintptr_t, PlayerCache> PlayerList = readyCache;
 
+		// stats
+		int playersRendered = 0;
+		int playersLooped = 0;
+		int validPlayersLooped = 0;
+		int invalidPlayersLooped = 0;
+		int teammatesSkipped = 0;
+
 		for (auto it : PlayerList) {
 			PlayerCache player = it.second;
 
+			playersLooped++;
+
 			// valid?
-			if (!player.Pawn || !player.Mesh || !player.BoneArray) continue;
+			if (!player.Pawn || !player.BoneArray) {
+				invalidPlayersLooped++;
+				continue;
+			}
+
+			validPlayersLooped++;
 
 			bool IsVis = point::Seconds - player.last_render <= 0.06f;
 
-			bool IsBot = player.isBot & 0x08;
-
-			bool IsDying = player.isDying & 0x20;
-
-			// knocked
-			bool IsDBNO = player.isDBNO & 0x10;
-
-			// check if dying (dead) ◉_◉
-			if (IsDying) {
-				//ImGui::GetBackgroundDrawList()->AddText((ImFont*)fonts::notosans_font, 18.5f, ImVec2(player.Neck2D.x, player.Neck2D.y), ImColor(255, 255, 255, 255), "dying");
-				continue;
-			}
+			// player.isBot
+			// player.isDBNO
 
 			// check if its me ༼ つ ◕_◕ ༽つ
 			if (player.PlayerState == point::PlayerState) {
@@ -36,10 +40,20 @@ namespace esp {
 			// chcek if not in lobby and check if its a teammate (omg friends) (◕‿◕✿)
 			if (point::Player && player.TeamId == local_player::localTeam) {
 				//ImGui::GetBackgroundDrawList()->AddText((ImFont*)fonts::notosans_font, 18.5f ,ImVec2(player.Neck2D.x, player.Neck2D.y), ImColor(255,255,255,255), "teammate");
+				teammatesSkipped++;
+				continue;
+			}
+
+			// check if dying (dead) ◉_◉
+			if (player.isDying) {
+				//ImGui::GetBackgroundDrawList()->AddText((ImFont*)fonts::notosans_font, 18.5f, ImVec2(player.Neck2D.x, player.Neck2D.y), ImColor(255, 255, 255, 255), "dying");
 				continue;
 			}
 
 			// ok maybe we can draw now
+
+			playersRendered++;
+
 
 			// skeleton
 			if (settings::config::skeleton)
@@ -68,7 +82,14 @@ namespace esp {
 				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.RightFoot2D.x, player.RightFoot2D.y), ImVec2(player.RightCalf2D.x, player.RightCalf2D.y), colSK, tk);
 			}
 			
-
 		}
+
+		// stats
+		info::render::playersRendered = playersRendered;
+		info::render::playersLooped = playersLooped;
+		info::render::validPlayersLooped = validPlayersLooped;
+		info::render::invalidPlayersLooped = invalidPlayersLooped;
+		info::render::teammatesSkipped = teammatesSkipped;
+
 	}
 }

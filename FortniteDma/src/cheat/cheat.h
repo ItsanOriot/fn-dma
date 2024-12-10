@@ -265,8 +265,6 @@ void updatePlayerList()
 		// start looping over the new players to prepare data
 		mem.SClear(mem.hS3);
 		for (int i = 0; i < playersToAdd.size(); i++) {
-			if (!playersToAdd[i].PlayerState)
-				continue;
 			mem.SPrepare(mem.hS3, playersToAdd[i].PlayerState + offsets::PawnPrivate, sizeof(uintptr_t));
 			mem.SPrepare(mem.hS3, playersToAdd[i].PlayerState + offsets::TeamId, sizeof(uint32_t));
 			mem.SPrepare(mem.hS3, playersToAdd[i].PlayerState + offsets::bIsABot, sizeof(BYTE));
@@ -274,11 +272,9 @@ void updatePlayerList()
 		mem.ExecuteMemoryReads(mem.hS3);
 		// read the prepared data
 		for (int i = 0; i < playersToAdd.size(); i++) {
-			if (!playersToAdd[i].PlayerState)
-				continue;
 			playersToAdd[i].Pawn = mem.SReads<uintptr_t>(mem.hS3, playersToAdd[i].PlayerState + offsets::PawnPrivate);
 			playersToAdd[i].TeamId = mem.SReads<uint32_t>(mem.hS3, playersToAdd[i].PlayerState + offsets::TeamId);
-			playersToAdd[i].isBot = mem.SReads<BYTE>(mem.hS3, playersToAdd[i].PlayerState + offsets::bIsABot);
+			playersToAdd[i].isBot = mem.SReads<BYTE>(mem.hS3, playersToAdd[i].PlayerState + offsets::bIsABot) & 0x08;
 		}
 
 
@@ -299,8 +295,8 @@ void updatePlayerList()
 				continue;
 			playersToAdd[i].Mesh = mem.SReads<uintptr_t>(mem.hS3, playersToAdd[i].Pawn + offsets::Mesh);
 			playersToAdd[i].RootComponent = mem.SReads<uintptr_t>(mem.hS3, playersToAdd[i].Pawn + offsets::RootComponent);
-			playersToAdd[i].isDying = mem.SReads<BYTE>(mem.hS3, playersToAdd[i].Pawn + offsets::isDying);
-			playersToAdd[i].isDBNO = mem.SReads<BYTE>(mem.hS3, playersToAdd[i].Pawn + offsets::IsDBNO);
+			playersToAdd[i].isDying = mem.SReads<BYTE>(mem.hS3, playersToAdd[i].Pawn + offsets::isDying) & 0x20;
+			playersToAdd[i].isDBNO = mem.SReads<BYTE>(mem.hS3, playersToAdd[i].Pawn + offsets::IsDBNO) & 0x20;
 		}
 
 
@@ -441,6 +437,7 @@ void updatePlayers()
 
 			if (it->second.Pawn) {
 				mem.SPrepare(mem.hS4, it->second.Pawn + offsets::Mesh, sizeof(uintptr_t));
+				mem.SPrepare(mem.hS3, it->second.Pawn + offsets::RootComponent, sizeof(uintptr_t));
 				mem.SPrepare(mem.hS4, it->second.Pawn + offsets::isDying, sizeof(BYTE));
 				mem.SPrepare(mem.hS4, it->second.Pawn + offsets::IsDBNO, sizeof(BYTE));
 			}
@@ -490,8 +487,9 @@ void updatePlayers()
 
 			if (it->second.Pawn) {
 				it->second.Mesh = mem.SReads<uintptr_t>(mem.hS4, it->second.Pawn + offsets::Mesh);
-				it->second.isDying = mem.SReads<BYTE>(mem.hS4, it->second.Pawn + offsets::isDying);
-				it->second.isDBNO = mem.SReads<BYTE>(mem.hS4, it->second.Pawn + offsets::IsDBNO);
+				it->second.RootComponent = mem.SReads<uintptr_t>(mem.hS3, it->second.Pawn + offsets::RootComponent);
+				it->second.isDying = mem.SReads<BYTE>(mem.hS4, it->second.Pawn + offsets::isDying) & 0x20;
+				it->second.isDBNO = mem.SReads<BYTE>(mem.hS4, it->second.Pawn + offsets::IsDBNO) & 0x20;
 			}
 
 			if (it->second.Mesh) {

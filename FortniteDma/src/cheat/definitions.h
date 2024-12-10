@@ -258,9 +258,9 @@ struct PlayerCache {
 	uint32_t TeamId = 0;
 	float last_render = 0;
 
-	BYTE isDying = false; // & 0x10
-	BYTE isDBNO = false;
-	BYTE isBot = false;
+	bool isDying = false;
+	bool isDBNO = false;
+	bool isBot = false;
 
 	FTransform HeadBone{}; // 68
 	FTransform BottomBone{}; // 0

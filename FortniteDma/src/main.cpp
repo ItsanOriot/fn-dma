@@ -104,7 +104,7 @@ bool on_initialize() {
 
 	// memory features
 	{
-		// refresh memory MID PRIORITY
+		// refresh memory LOW/MID PRIORITY
 		feature RefreshLight = { memRefreshLight , 1, 5000 };
 		memoryList.push_back(RefreshLight);
 

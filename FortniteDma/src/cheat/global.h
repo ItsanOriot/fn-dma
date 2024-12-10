@@ -42,3 +42,15 @@ namespace point {
     // maybe move into main camera
     inline double Seconds = 0; // for vischeck
 }
+
+namespace info {
+
+    namespace render {
+        inline uint32_t playersRendered = 0; // players i am actually drawing
+        inline uint32_t playersLooped = 0; // all players i am looping when rendering
+        inline uint32_t validPlayersLooped = 0; // valid players i am looping when rendering
+        inline uint32_t invalidPlayersLooped = 0; // valid players i am looping when rendering
+        inline uint32_t teammatesSkipped = 0; // players in my team skipped when rendering
+    }
+
+}

@@ -169,7 +169,7 @@ void menu::StatisticsWindow() {
 }
 
 void menu::PlayerListWindow() {
-	ImVec2 size = ImVec2(500, 750);
+	ImVec2 size = ImVec2(510, 750);
 
 	std::unordered_map<uintptr_t, PlayerCache> PlayerList = readyCache;
 	static uintptr_t selectedPlayer = 0;
@@ -178,14 +178,14 @@ void menu::PlayerListWindow() {
 	ImGui::SetNextWindowSize(size);
 
 	if (ImGui::Begin("Player List", NULL, ImGuiWindowFlags_NoResize)) {
-		
-		ImGui::BeginChild("Player List", ImVec2(495, 745), ImGuiChildFlags_Border);
+		ImGui::SetCursorPos(ImVec2(10, 30));
+		ImGui::BeginChild("Player List", ImVec2(490, 725), ImGuiChildFlags_Border);
 
 		for (auto it : PlayerList) {
 
 			bool isSelected = (selectedPlayer == it.first);
 
-			if (ImGui::Selectable(std::format("PlayerState -> 0x{:X} {}", it.first, it.first == point::PlayerState ? "(me)" : "").c_str())) {
+			if (ImGui::Selectable(std::format("PlayerState -> 0x{:X} {} {} ", it.first, (!it.second.Pawn || !it.second.BoneArray) ? "(invalid)" : "(valid)", it.first == point::PlayerState ? "(me)" : "").c_str())) {
 				selectedPlayer = it.first;
 			}
 		}
@@ -288,6 +288,17 @@ void menu::AdvancedDebugWindow() {
 		ImGui::SetCursorPos(ImVec2(x, y += 20));
 		ImGui::Text(std::format("PlayerState -> 0x{:X}", point::PlayerState).c_str());
 
+		ImGui::SetCursorPos(ImVec2(x, y += 40));
+		ImGui::Text(std::format("Players Rendered -> {:d}", info::render::playersRendered).c_str());
+		ImGui::SetCursorPos(ImVec2(x, y += 20));
+		ImGui::Text(std::format("Players Looped -> {:d}", info::render::playersLooped).c_str());
+		ImGui::SetCursorPos(ImVec2(x, y += 20));
+		ImGui::Text(std::format("Valid Players Looped -> {:d}", info::render::validPlayersLooped).c_str());
+		ImGui::SetCursorPos(ImVec2(x, y += 20));
+		ImGui::Text(std::format("Invalid Players Looped -> {:d}", info::render::invalidPlayersLooped).c_str());
+		ImGui::SetCursorPos(ImVec2(x, y += 20));
+		ImGui::Text(std::format("Teammates Skipped -> {:d}", info::render::teammatesSkipped).c_str());
+
 		// second row
 
 		x = 310; y = 30;
@@ -310,7 +321,7 @@ void menu::AdvancedDebugWindow() {
 		//ImGui::Text(std::format("LocalPlayers -> 0x{:X}", point::LocalPlayers).c_str());
 		//ImGui::SetCursorPos(ImVec2(x, y += 20));
 		//ImGui::Text(std::format("LocalPlayer -> 0x{:X}", point::LocalPlayer).c_str());
-		ImGui::SetCursorPos(ImVec2(x, y += 60));
+		ImGui::SetCursorPos(ImVec2(x, y += 40));
 		ImGui::Text(std::format("PlayerArray -> 0x{:X}", point::PlayerArray.data).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 20));
 		ImGui::Text(std::format("PlayerArray Count -> {:d}", point::PlayerArray.count).c_str());
