@@ -30,8 +30,8 @@ void newInfo()
 
 		mem.SPrepare(mem.hS, point::va_text + offsets::Uworld, sizeof(uintptr_t));
 
-		mem.SPrepare(mem.hS, point::Uworld + 0x120, 0x18);
-		//mem.SPrepare(mem.hS, point::Uworld + 0x130, sizeof(uintptr_t));
+		mem.SPrepare(mem.hS, point::Uworld + offsets::CameraLocationPointer, sizeof(uintptr_t));
+		mem.SPrepare(mem.hS, point::Uworld + offsets::CameraRotationPointer, sizeof(uintptr_t));
 
 		mem.SPrepare(mem.hS, point::Uworld + offsets::GameInstance, sizeof(uintptr_t));
 		mem.SPrepare(mem.hS, point::Uworld + offsets::PersistentLevel, sizeof(uintptr_t));
@@ -70,8 +70,8 @@ void newInfo()
 
 		point::Uworld = mem.SReads<uintptr_t>(mem.hS, point::va_text + offsets::Uworld);
 
-		point::LocationPointer = mem.SReads<uintptr_t>(mem.hS, point::Uworld + 0x120);
-		point::RotationPointer = mem.SReads<uintptr_t>(mem.hS, point::Uworld + 0x130);
+		point::LocationPointer = mem.SReads<uintptr_t>(mem.hS, point::Uworld + offsets::CameraLocationPointer);
+		point::RotationPointer = mem.SReads<uintptr_t>(mem.hS, point::Uworld + offsets::CameraRotationPointer);
 		point::GameInstance = mem.SReads<uintptr_t>(mem.hS, point::Uworld + offsets::GameInstance);
 		point::PersistentLevel = mem.SReads<uintptr_t>(mem.hS, point::Uworld + offsets::PersistentLevel);
 		point::GameState = mem.SReads<uintptr_t>(mem.hS, point::Uworld + offsets::GameState);

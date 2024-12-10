@@ -51,6 +51,7 @@ namespace info {
         inline uint32_t validPlayersLooped = 0; // valid players i am looping when rendering
         inline uint32_t invalidPlayersLooped = 0; // valid players i am looping when rendering
         inline uint32_t teammatesSkipped = 0; // players in my team skipped when rendering
+        inline uint32_t validBots = 0; // valid bots looped when rendering
     }
 
 }

@@ -7,10 +7,9 @@
 #include "conio.h"
 #pragma comment(lib, "setupapi.lib")
 using namespace std;
-HANDLE hSerial;
+inline HANDLE hSerial;
 
-
-string find_port(const string& targetDescription) {
+inline string find_port(const string& targetDescription) {
 	HDEVINFO hDevInfo = SetupDiGetClassDevsA(&GUID_DEVCLASS_PORTS, 0, 0, DIGCF_PRESENT);
 	if (hDevInfo == INVALID_HANDLE_VALUE) return "";
 
@@ -40,7 +39,7 @@ string find_port(const string& targetDescription) {
 }
 
 
-bool open_port(HANDLE& hSerial, const char* portName, DWORD baudRate) {
+inline bool open_port(HANDLE& hSerial, const char* portName, DWORD baudRate) {
 	hSerial = CreateFileA(portName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 
 	if (hSerial == INVALID_HANDLE_VALUE) return false;
@@ -78,18 +77,8 @@ bool open_port(HANDLE& hSerial, const char* portName, DWORD baudRate) {
 	return true;
 }
 
-void send_command(HANDLE hSerial, const std::string& command) {
+inline void send_command(HANDLE hSerial, const std::string& command) {
 	DWORD bytesWritten;
 	if (!WriteFile(hSerial, command.c_str(), command.length(), &bytesWritten, NULL)) {
 	}
-}
-
-inline void km_move(int X, int Y) {
-	std::string command = "km.move(" + std::to_string(X) + "," + std::to_string(Y) + ")\r\n";
-	send_command(hSerial, command.c_str());
-}
-
-inline void km_click(int clickDelay) {
-	std::string command = "km.click(0)\r\n";
-	send_command(hSerial, command.c_str());
 }

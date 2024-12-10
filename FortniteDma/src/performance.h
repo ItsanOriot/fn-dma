@@ -30,7 +30,6 @@ namespace stats {
     inline CircularBuffer updatePlayerListData(1000);
     inline CircularBuffer updatePlayersData(1000);
 
-
     inline CircularBuffer memoryThreadData(1000);
     inline CircularBuffer mainThreadData(1000);
 

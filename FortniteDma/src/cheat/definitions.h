@@ -322,6 +322,10 @@ struct PlayerCache {
 
 };
 
+inline bool isPlayerValid(PlayerCache player) {
+	return player.Pawn && player.BoneArray;
+}
+
 struct tarray
 {
 	uintptr_t data;

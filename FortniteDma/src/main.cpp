@@ -8,7 +8,9 @@
 #include <dwmapi.h>
 #include <d3d11.h>
 #include <chrono>
+#include <fstream>
 #include <iostream>
+#include <string>
 #include "console/console.h"
 
 #include "settings.h"
@@ -27,7 +29,10 @@
 #include "dma/DMAHandler.h"
 #include "kmbox/kmbox_interface.h"
 
+#include "kmbox/kmbox_util.h"
+
 #include "cheat/cheat.h"
+#include "cheat/radar.h"
 #include "cheat/esp.h"
 
 vector<feature> memoryList;
@@ -42,21 +47,8 @@ void memRefreshLight() {
 
 bool on_initialize() {
 
-	string port = find_port("USB-SERIAL CH340");
-
-	if (!port.empty()) {
-
-		if (open_port(hSerial, port.c_str(), CBR_115200)) {
-			std::cout << hue::green << "[+] " << hue::white << "Serial kmbox found" << std::endl;
-			settings::SerialKmbox = true;
-		}
-		else
-		{
-			std::cout << hue::yellow << "[/] " << hue::white << "Couldnt connect to serial kmbox" << std::endl;
-		}
-	}
-	else {
-		std::cout << hue::yellow << "[/] " << hue::white << "No serial kmbox found" << std::endl;
+	if (connect_serial_kmbox()) {
+		settings::kmbox::SerialKmbox = true;
 	}
 	
 	if (mem.Init(L"FortniteClient-Win64-Shipping.exe", settings::dma::MemoryMap) < 0) {
@@ -64,8 +56,10 @@ bool on_initialize() {
 		return false;
 	}
 
+	std::cout << hue::green << "[+] " << hue::white << "Initialized VMMDLL" << std::endl;
+
 	bool fixedDtb = false;
-	for (int i = 0; i < 5 && !fixedDtb; i++) {
+	for (int i = 0; i < 20 && !fixedDtb; i++) {
 		if (mem.FixDTB())
 			fixedDtb = true;
 	}
@@ -73,16 +67,23 @@ bool on_initialize() {
 	std::cout << "\n";
 
 	if (!fixedDtb) {
-		std::cout << hue::red << "[!] " << hue::white << "Failed to fix dtb" << std::endl;
+		std::cout << hue::red << "[!] " << hue::white << "Failed to find correct dtb" << std::endl;
 		return false;
 	}
 
-	mem.cachePML4();
+	if (!mem.cachePML4()) {
+		std::cout << hue::red << "[!] " << hue::white << "Failed to cache tables" << std::endl;
+		return false;
+	}
+
+	std::cout << hue::green << "[+] " << hue::white << "Cached tables" << std::endl;
 
 	if (!mem.SCreate()) {
 		std::cout << hue::red << "[!] " << hue::white << "Failed to initialize all handles" << std::endl;
 		return false;
 	}
+
+	std::cout << hue::green << "[+] " << hue::white << "Scatter handles Created" << std::endl;
 
 	point::Base = mem.GetBaseAddress();
 	if (!point::Base)
@@ -90,6 +91,8 @@ bool on_initialize() {
 		std::cout << hue::red << "[!] " << hue::white << "Failed to get base address" << std::endl;
 		return false;
 	}
+
+	std::cout << hue::green << "[+] " << hue::white << "Successfully refreshed process" << std::endl;
 	
 	if (!mem.InitKeyboard()) 
 	{
@@ -97,10 +100,17 @@ bool on_initialize() {
 		return false;
 	}
 
-	if (!update_va_text()) {
-		std::cout << hue::red << "[!] " << hue::white << "Failed to get text_va" << std::endl;
-		return false;
-	}
+	std::cout << hue::green << "[+] " << hue::white << "Initialized keyboard hotkeys" << std::endl;
+
+	// no longer any offset (for now)
+	point::va_text = point::Base;
+	//if (!update_va_text()) {
+	//	std::cout << hue::red << "[!] " << hue::white << "Failed to get text_va" << std::endl;
+	//	return false;
+	//}
+
+	// configs
+	settings::kmbox::net::loadConfig();
 
 	// memory features
 	{
@@ -127,13 +137,19 @@ bool on_initialize() {
 
 	// main thread features
 	{
-		// esp
+		// health checks (not many)
+		feature HealthCheck = { healthChecks, 1, 100 };
+		mainList.push_back(HealthCheck);
+
+		// drawing features must be run every loop
+
+		// radar
+		feature Radar = { radar::Render, 1, 0 };
+		mainList.push_back(Radar);
+
+		// esp 
 		feature Walls = { esp::renderPlayers, 1, 0 };
 		mainList.push_back(Walls);
-
-		// health checks (not many)
-		feature healthCheck = { healthChecks, 1, 100 };
-		mainList.push_back(healthCheck);
 	}
 
 	return true;

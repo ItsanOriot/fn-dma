@@ -176,8 +176,10 @@
     <ClInclude Include="src\cheat\esp.h" />
     <ClInclude Include="src\cheat\global.h" />
     <ClInclude Include="src\cheat\offsets.h" />
+    <ClInclude Include="src\cheat\radar.h" />
     <ClInclude Include="src\kmbox\HidTable.h" />
     <ClInclude Include="src\kmbox\kmboxNet.h" />
+    <ClInclude Include="src\kmbox\kmbox_util.h" />
     <ClInclude Include="src\performance.h" />
     <ClInclude Include="src\cheat\utils.h" />
     <ClInclude Include="src\menu\menu.h" />

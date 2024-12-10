@@ -1,17 +1,36 @@
 
 #include "menu.h"
 
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <format>
+#include <numeric>
+
+#include "../kmbox/kmboxNet.h"
+#include "../kmbox/HidTable.h"
+#include "../kmbox/kmbox_interface.h"
+
+#include "../console/console.h"
 #include "../cheat/global.h"
 #include "../performance.h"
 #include "../rendering/Font.h"
 #include "../settings.h"
+#include "../kmbox/kmbox_util.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_dx11.h>
 #include <imgui/imgui_impl_win32.h>
 
-#include <format>
-#include <numeric>
+// what is this you ask? well, ask chatgpt - sfYass
+static int StringInputTextCallback(ImGuiInputTextCallbackData* data) {
+	if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+		std::string* str = static_cast<std::string*>(data->UserData);
+		str->resize(data->BufTextLen);
+		data->Buf = &(*str)[0];
+	}
+	return 0;
+}
 
 void menu::Menu() {
 	ImVec2 size = ImVec2(940, 500);
@@ -22,25 +41,77 @@ void menu::Menu() {
 
 		// aim options
 		ImGui::SetCursorPos(ImVec2(10, 30));
-		ImGui::BeginChild("Aim", ImVec2(300, 475), ImGuiChildFlags_Border);
+		ImGui::BeginChild("Aim", ImVec2(300, 460), ImGuiChildFlags_Border);
 		ImGui::Text("Aim");
 		ImGui::Separator();
+
 		ImGui::Text("no aim :(");
+		ImGui::Separator();
+
+		ImGui::SetCursorPos(ImVec2(10, 310));
+		ImGui::Separator();
+		ImGui::Text("Kmbox net");
+		// on that chatgpt shit
+		ImGui::InputText(
+			"Ip",
+			&settings::kmbox::net::ip[0], settings::kmbox::net::ip.capacity() + 1,
+			ImGuiInputTextFlags_CallbackResize,
+			StringInputTextCallback,
+			&settings::kmbox::net::ip
+		);
+		ImGui::InputText(
+			"Port",
+			&settings::kmbox::net::port[0], settings::kmbox::net::port.capacity() + 1,
+			ImGuiInputTextFlags_CallbackResize,
+			StringInputTextCallback,
+			&settings::kmbox::net::port
+		);
+		ImGui::InputText(
+			"Uuid",
+			&settings::kmbox::net::uuid[0], settings::kmbox::net::uuid.capacity() + 1,
+			ImGuiInputTextFlags_CallbackResize,
+			StringInputTextCallback,
+			&settings::kmbox::net::uuid
+		);
+		if (ImGui::Button("Connect")) {
+			if (connect_net_kmbox(settings::kmbox::net::ip, settings::kmbox::net::port, settings::kmbox::net::uuid)) {
+				std::cout << hue::green << "[+] " << hue::white << "Kmbox net connected" << std::endl;
+				settings::kmbox::net::saveConfig();
+			}
+		}
 		ImGui::Separator();
 		ImGui::EndChild();
 
 		// esp options
 		ImGui::SetCursorPos(ImVec2(320, 30));
-		ImGui::BeginChild("Esp", ImVec2(300, 475), ImGuiChildFlags_Border);
+		ImGui::BeginChild("Esp", ImVec2(300, 460), ImGuiChildFlags_Border);
 		ImGui::Text("Esp");
 		ImGui::Separator();
 		ImGui::Checkbox("Skeleton", &settings::config::skeleton);
 		ImGui::Separator();
+
+
+		ImGui::SetCursorPos(ImVec2(10, 310));
+		ImGui::Separator();
+		ImGui::Text("Radar");
+		ImGui::SliderInt("X", &settings::config::RadarX, 0, settings::window::Width - settings::config::RadarXSize);
+		ImGui::SliderInt("Y", &settings::config::RadarY, 0, settings::window::Height - settings::config::RadarYSize);
+		ImGui::SliderInt("Size", &settings::config::RadarYSize, 0, settings::window::Height);
+		settings::config::RadarXSize = settings::config::RadarYSize;
+
+		/*
+		ImGui::SliderInt("Radar X Size", &settings::config::RadarXSize, 0, settings::window::Width);
+		ImGui::SliderInt("Radar Y Size", &settings::config::RadarYSize, 0, settings::window::Height);
+		*/
+
+		ImGui::SliderFloat("Zoom", &settings::config::RadarZoom, 1, 10);
+		ImGui::Separator();
+
 		ImGui::EndChild();
 
 		// debug options
 		ImGui::SetCursorPos(ImVec2(630, 30));
-		ImGui::BeginChild("Debug", ImVec2(300, 475), ImGuiChildFlags_Border);
+		ImGui::BeginChild("Debug", ImVec2(300, 460), ImGuiChildFlags_Border);
 		ImGui::Text("Debug");
 		ImGui::Separator();
 		ImGui::Checkbox("Statistics", &settings::menu::Statistics);
@@ -127,7 +198,7 @@ void menu::StatisticsWindow() {
 			float GDataAvgMs = std::accumulate(GDataValues.begin(), GDataValues.end(), 0.0f) / GDataValues.size();
 			float GDataMaxMs = GDataValues.empty() ? 0.0f : *std::max_element(GDataValues.begin(), GDataValues.end());
 
-			ImGui::Text("GDatad performance Graph (ms per loop)");
+			ImGui::Text("GDatad performance Graph (ms per execution)");
 			ImGui::PlotLines("##Performance", GDataValues.data(), GDataValues.size(), 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
 			ImGui::Text("Average: %.2f ms Max: %.2f ms", GDataAvgMs, GDataMaxMs);
 
@@ -138,7 +209,7 @@ void menu::StatisticsWindow() {
 			float PlayerListAvgMs = std::accumulate(PlayerListValues.begin(), PlayerListValues.end(), 0.0f) / PlayerListValues.size();
 			float PlayerListMaxMs = PlayerListValues.empty() ? 0.0f : *std::max_element(PlayerListValues.begin(), PlayerListValues.end());
 
-			ImGui::Text("PlayerList performance Graph (ms per loop)");
+			ImGui::Text("PlayerList performance Graph (ms per execution)");
 			ImGui::PlotLines("##Performance", PlayerListValues.data(), PlayerListValues.size(), 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
 			ImGui::Text("Average: %.2f ms Max: %.2f ms", PlayerListAvgMs, PlayerListMaxMs);
 
@@ -149,7 +220,7 @@ void menu::StatisticsWindow() {
 			float CameraAvgMs = std::accumulate(CameraValues.begin(), CameraValues.end(), 0.0f) / CameraValues.size();
 			float CameraMaxMs = CameraValues.empty() ? 0.0f : *std::max_element(CameraValues.begin(), CameraValues.end());
 
-			ImGui::Text("Camera performance Graph (ms per loop)");
+			ImGui::Text("Camera performance Graph (ms per execution)");
 			ImGui::PlotLines("##Performance", CameraValues.data(), CameraValues.size(), 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
 			ImGui::Text("Average: %.2f ms Max: %.2f ms", CameraAvgMs, CameraMaxMs);
 
@@ -160,7 +231,7 @@ void menu::StatisticsWindow() {
 			float PlayersAvgMs = std::accumulate(PlayersValues.begin(), PlayersValues.end(), 0.0f) / PlayersValues.size();
 			float PlayersMaxMs = PlayersValues.empty() ? 0.0f : *std::max_element(PlayersValues.begin(), PlayersValues.end());
 
-			ImGui::Text("PlayersPos performance Graph (ms per loop)");
+			ImGui::Text("PlayersPos performance Graph (ms per execution)");
 			ImGui::PlotLines("##Performance", PlayersValues.data(), PlayersValues.size(), 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
 			ImGui::Text("Average: %.2f ms Max: %.2f ms", PlayersAvgMs, PlayersMaxMs);
 		}
@@ -179,15 +250,21 @@ void menu::PlayerListWindow() {
 
 	if (ImGui::Begin("Player List", NULL, ImGuiWindowFlags_NoResize)) {
 		ImGui::SetCursorPos(ImVec2(10, 30));
-		ImGui::BeginChild("Player List", ImVec2(490, 725), ImGuiChildFlags_Border);
+		ImGui::BeginChild("Player List", ImVec2(490, 710), ImGuiChildFlags_Border);
 
 		for (auto it : PlayerList) {
 
 			bool isSelected = (selectedPlayer == it.first);
+			bool invalid = (!it.second.Pawn || !it.second.BoneArray);
 
-			if (ImGui::Selectable(std::format("PlayerState -> 0x{:X} {} {} ", it.first, (!it.second.Pawn || !it.second.BoneArray) ? "(invalid)" : "(valid)", it.first == point::PlayerState ? "(me)" : "").c_str())) {
+			ImGui::PushStyleColor(ImGuiCol_Text, invalid ? ImColor(255, 0, 0, 255).Value : ImColor(0, 255, 0, 255).Value);
+
+			if (ImGui::Selectable(std::format("PlayerState -> 0x{:X} {} {} ", it.first, invalid ? "(invalid)" : "(valid)", it.first == point::PlayerState ? "(me)" : "").c_str())) {
 				selectedPlayer = it.first;
 			}
+
+			ImGui::PopStyleColor();
+
 		}
 
 		ImGui::EndChild();
@@ -296,6 +373,8 @@ void menu::AdvancedDebugWindow() {
 		ImGui::Text(std::format("Valid Players Looped -> {:d}", info::render::validPlayersLooped).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 20));
 		ImGui::Text(std::format("Invalid Players Looped -> {:d}", info::render::invalidPlayersLooped).c_str());
+		ImGui::SetCursorPos(ImVec2(x, y += 20));
+		ImGui::Text(std::format("Valid Bots Looped -> {:d}", info::render::validBots).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 20));
 		ImGui::Text(std::format("Teammates Skipped -> {:d}", info::render::teammatesSkipped).c_str());
 

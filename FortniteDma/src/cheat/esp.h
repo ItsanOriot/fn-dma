@@ -12,6 +12,7 @@ namespace esp {
 		int validPlayersLooped = 0;
 		int invalidPlayersLooped = 0;
 		int teammatesSkipped = 0;
+		int bots = 0;
 
 		for (auto it : PlayerList) {
 			PlayerCache player = it.second;
@@ -19,17 +20,21 @@ namespace esp {
 			playersLooped++;
 
 			// valid?
-			if (!player.Pawn || !player.BoneArray) {
+			if (!isPlayerValid(player)) {
 				invalidPlayersLooped++;
 				continue;
 			}
 
 			validPlayersLooped++;
 
+			// should be in the updates
 			bool IsVis = point::Seconds - player.last_render <= 0.06f;
 
-			// player.isBot
 			// player.isDBNO
+
+			if (player.isBot) {
+				bots++;
+			}
 
 			// check if its me ༼ つ ◕_◕ ༽つ
 			if (player.PlayerState == point::PlayerState) {
@@ -90,6 +95,7 @@ namespace esp {
 		info::render::validPlayersLooped = validPlayersLooped;
 		info::render::invalidPlayersLooped = invalidPlayersLooped;
 		info::render::teammatesSkipped = teammatesSkipped;
+		info::render::validBots = bots;
 
 	}
 }

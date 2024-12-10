@@ -143,5 +143,11 @@
     <ClInclude Include="src\kmbox\kmboxNet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\kmbox\kmbox_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cheat\radar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

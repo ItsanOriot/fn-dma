@@ -98,6 +98,11 @@ int kmNet_init(char* ip, char* port, char* mac)
 	}
 	srand((unsigned)time(NULL));
 	sockClientfd = socket(AF_INET, SOCK_DGRAM, 0);
+	// Set the timeout
+	DWORD timeout = 5000; // 5000 ms = 5 seconds
+	if (setsockopt(sockClientfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout)) == SOCKET_ERROR) {
+		return err_net_rx_timeout;
+	}
 	addrSrv.sin_addr.S_un.S_addr = inet_addr(ip);
 	addrSrv.sin_family = AF_INET;
 	addrSrv.sin_port = htons(atoi(port));//??UUID[1]>>16?16?

@@ -165,12 +165,16 @@ public:
 	ULONG64 GetModuleAddress(std::wstring modulename);
 	void Read(ULONG64 address, ULONG64 buffer, SIZE_T size);
 
-	void cachePML4()
+	bool cachePML4()
 	{
+		bool success = true;
+
 		DWORD readsize;
-		VMMDLL_MemReadEx(DMA_HANDLE, -1, processInfo.dtb, reinterpret_cast<PBYTE>(processInfo.pml4), sizeof(processInfo.pml4), (PDWORD)&readsize, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
-		VMMDLL_MemReadEx((VMM_HANDLE)-666, 333, (ULONG64)processInfo.pml4, 0, 0, 0, 0);
-		VMMDLL_ConfigSet(this->DMA_HANDLE, VMMDLL_OPT_PROCESS_DTB | this->GetPID(), 666);
+		success = VMMDLL_MemReadEx(DMA_HANDLE, -1, processInfo.dtb, reinterpret_cast<PBYTE>(processInfo.pml4), sizeof(processInfo.pml4), (PDWORD)&readsize, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
+		success = VMMDLL_MemReadEx((VMM_HANDLE)-666, 333, (ULONG64)processInfo.pml4, 0, 0, 0, 0);
+		success = VMMDLL_ConfigSet(this->DMA_HANDLE, VMMDLL_OPT_PROCESS_DTB | this->GetPID(), 666);
+
+		return success;
 	}
 
 	VMMDLL_SCATTER_HANDLE hS = NULL;
@@ -203,8 +207,6 @@ public:
 			std::cout << hue::red << "[!] " << hue::white << "Failed to create scatter handle 4" << std::endl;
 			return false;
 		}
-
-		std::cout << hue::green << "[+] " << hue::white << "Scatter handles Created" << std::endl;
 
 		return true;
 	}

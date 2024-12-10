@@ -42,7 +42,7 @@ bool DMAHandler::FixDTB()
 		return false;
 	}
 
-	std::cout << hue::green << "[+] " << hue::white << "Initializing vmmdll plugins..\r" << std::flush;
+	std::cout << hue::green << "[+] " << hue::white << "Initializing plugins..\r" << std::flush;
 
 	//have to sleep a little or we try reading the file before the plugin initializes fully
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -208,7 +208,7 @@ int DMAHandler::Init(const wchar_t* wname, bool memMap)
 			return -1;
 		}
 
-		LPCSTR args[] = { (LPCSTR)"", (LPCSTR)"-device", (LPCSTR)"fpga", (LPCSTR)"-norefresh", (LPCSTR)""};
+		LPCSTR args[] = { (LPCSTR)"", (LPCSTR)"-device", (LPCSTR)"fpga", (LPCSTR)"-norefresh", (LPCSTR)"", (LPCSTR)"" };
 		DWORD argc = 4;
 
 
