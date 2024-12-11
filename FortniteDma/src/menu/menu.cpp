@@ -125,6 +125,9 @@ void menu::Menu() {
 		ImGui::Separator();
 		ImGui::Checkbox("Internals", &settings::menu::Internals);
 		ImGui::Separator();
+		ImGui::Separator();
+		ImGui::Checkbox("Fuser Mode", &settings::config::Fuser);
+		ImGui::Separator();
 		ImGui::EndChild();
 
 	} ImGui::End();
