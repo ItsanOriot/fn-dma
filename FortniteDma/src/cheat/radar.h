@@ -47,6 +47,8 @@ namespace radar {
 
 	void DrawHUD(int xAxis, int yAxis, int width, int height)
 	{
+
+
 		ImDrawList* drawList = ImGui::GetBackgroundDrawList();
 
 		ImVec2 pos(xAxis, yAxis);
@@ -55,7 +57,7 @@ namespace radar {
 
 		// Draw outline box
 		ImU32 outlineColor = IM_COL32(75, 0, 95, 255); // Adjust color as needed
-		drawList->AddRect(pos, ImVec2(pos.x + siz.x, pos.y + siz.y), outlineColor, NULL, NULL, 3.f);
+		drawList->AddRect(pos, ImVec2(pos.x + siz.x, pos.y + siz.y), outlineColor, NULL, NULL, 5.f);
 
 		// Draw filled box
 		ImU32 fillColor = IM_COL32(25, 25, 25, 255); // Adjust color as needed
@@ -71,6 +73,43 @@ namespace radar {
 		// Draw circle
 		float circleRadius = 2.0f;
 		drawList->AddCircle(RadarCenter, circleRadius, lineColor, 12, 1.0f);
+
+		//// Set the size and position of the window
+		////ImVec2 pos(xAxis, yAxis);
+		//ImVec2 siz(width, height);
+		//ImVec2 RadarCenter(siz.x / 2,siz.y / 2);
+
+		////ImGui::SetNextWindowSize(siz)
+		//ImGui::SetNextWindowSize(siz);
+
+		//// Begin an ImGui window
+		//ImGui::Begin("Radar Window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
+
+		//// Access the window draw list
+		//ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+		//// Draw outline box
+		//ImU32 outlineColor = IM_COL32(75, 0, 95, 255); // Adjust color as needed
+		//drawList->AddRect(ImVec2(0,0), ImVec2(siz.x, siz.y), outlineColor, NULL, NULL, 5.f);
+
+		//// Draw filled box
+		////ImU32 fillColor = IM_COL32(25, 25, 25, 255); // Adjust color as needed
+		////drawList->AddRectFilled(pos, ImVec2(siz.x, siz.y), fillColor);
+
+		//// Draw lines
+		//ImU32 lineColor = IM_COL32(100, 100, 100, 255); // Adjust color as needed
+		//drawList->AddLine(RadarCenter, ImVec2(0, 0), lineColor);
+		//drawList->AddLine(RadarCenter, ImVec2( siz.x, 0), lineColor);
+		//drawList->AddLine(ImVec2(0, RadarCenter.y), ImVec2( siz.x, RadarCenter.y), lineColor);
+		//drawList->AddLine(RadarCenter, ImVec2(RadarCenter.x, siz.y), lineColor);
+
+		//// Draw circle
+		//float circleRadius = 2.0f;
+		//drawList->AddCircle(RadarCenter, circleRadius, lineColor, 12, 1.0f);
+
+		//// End the window
+		//ImGui::End();
+
 	}
 
 	void DrawPoint(Vector3 position, int distance, Vector3 localPosition, int scale, float zoom, double localYaw, int xAxis, int yAxis, int width, int height, ImColor color)

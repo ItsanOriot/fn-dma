@@ -15,8 +15,11 @@
 #include "../cheat/global.h"
 #include "../performance.h"
 #include "../rendering/Font.h"
+#include "../rendering/images.h"
 #include "../settings.h"
 #include "../kmbox/kmbox_util.h"
+
+#include "../dma/DMAHandler.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_dx11.h>
@@ -36,23 +39,67 @@ void menu::Menu() {
 	ImVec2 size = ImVec2(940, 500);
 	ImGui::SetNextWindowSize(size);
 	ImGui::PushFont((ImFont*)fonts::typenatural_font);
-	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
-	if (ImGui::Begin(std::format("SuperNatural v{:d}.{:d}", settings::runtime::version_major, settings::runtime::version_minor).c_str(), NULL, ImGuiWindowFlags_NoResize)) {
+	if (ImGui::Begin(std::format("SuperNatural v{:d}.{:d} key->Insert", settings::runtime::version_major, settings::runtime::version_minor).c_str(), NULL, ImGuiWindowFlags_NoResize)) {
+
+		if (images::supernatural) {
+			ImGui::SetCursorPos({ 0, 0 });
+			ImGui::Image(images::supernatural, size);
+		}
+
+		static bool selectingAim = false;
+		static bool selectingTrigger = false;
 
 		// aim options
 		ImGui::SetCursorPos(ImVec2(10, 30));
 		ImGui::BeginChild("Aim", ImVec2(300, 460), ImGuiChildFlags_Border);
-		ImGui::Text("Aim");
 		ImGui::Separator();
+		ImGui::Text("Aim");
 		ImGui::Checkbox("Aimbot", &settings::config::Aimbot);
 		ImGui::SliderInt("Smoothness", &settings::config::AimSmoothing, 1, 100);
 		ImGui::SliderInt("FOV", &settings::config::AimFov, 1, settings::window::Height/2);
+
+
+		if (ImGui::Button(selectingAim ? "Press key" : std::format("Aim Key: {:d}", settings::config::AimKey).c_str()))
+			if (!selectingTrigger)
+				selectingAim = !selectingAim;
+
+		if (selectingAim) {
+			for (int i = 0; i < 256; i++) {
+				if (mem.IsKeyDown(i)) { // doesnt read mem ofc
+					settings::config::AimKey = i;
+					selectingAim = false;
+				}
+			}
+		}
+
+		ImGui::Separator();
+
+		ImGui::SetCursorPos(ImVec2(10, 180));
+		ImGui::Separator();
+		ImGui::Text("Trigger");
+		ImGui::Checkbox("TriggerBot", &settings::config::TriggerBot);
+		ImGui::SliderInt("Delay", &settings::config::TriggerDelay, 1, 100);
+
+		
+		if (ImGui::Button(selectingTrigger ? "Press key" : std::format("Trg Key: {:d}", settings::config::TriggerKey).c_str()))
+			if (!selectingAim)
+				selectingTrigger = !selectingTrigger;
+
+		if (selectingTrigger) {
+			for (int i = 0; i < 256; i++) {
+				if (mem.IsKeyDown(i)) { // doesnt read mem ofc
+					settings::config::TriggerKey = i;
+					selectingTrigger = false;
+				}
+			}
+		}
+
 		ImGui::Separator();
 
 		ImGui::SetCursorPos(ImVec2(10, 310));
 		ImGui::Separator();
 		ImGui::Text("Kmbox net");
-		// on that chatgpt shit
+		// on that chatgpt xD
 		ImGui::InputText(
 			"Ip",
 			&settings::kmbox::net::ip[0], settings::kmbox::net::ip.capacity() + 1,
@@ -87,8 +134,9 @@ void menu::Menu() {
 		// esp options
 		ImGui::SetCursorPos(ImVec2(320, 30));
 		ImGui::BeginChild("Esp", ImVec2(300, 460), ImGuiChildFlags_Border);
-		ImGui::Text("Esp");
 		ImGui::Separator();
+		ImGui::Text("Esp");
+		ImGui::Checkbox("Fuser Mode", &settings::config::Fuser);
 		ImGui::Checkbox("Box", &settings::config::Box);
 		ImGui::Checkbox("Skeleton", &settings::config::Skeleton);
 		ImGui::Separator();
@@ -101,12 +149,6 @@ void menu::Menu() {
 		ImGui::SliderInt("Y", &settings::config::RadarY, 0, settings::window::Height - settings::config::RadarYSize);
 		ImGui::SliderInt("Size", &settings::config::RadarYSize, 0, settings::window::Height);
 		settings::config::RadarXSize = settings::config::RadarYSize;
-
-		/*
-		ImGui::SliderInt("Radar X Size", &settings::config::RadarXSize, 0, settings::window::Width);
-		ImGui::SliderInt("Radar Y Size", &settings::config::RadarYSize, 0, settings::window::Height);
-		*/
-
 		ImGui::SliderFloat("Zoom", &settings::config::RadarZoom, 1, 10);
 		ImGui::Separator();
 
@@ -115,19 +157,26 @@ void menu::Menu() {
 		// debug options
 		ImGui::SetCursorPos(ImVec2(630, 30));
 		ImGui::BeginChild("Debug", ImVec2(300, 460), ImGuiChildFlags_Border);
+		ImGui::Separator();
 		ImGui::Text("Debug");
-		ImGui::Separator();
 		ImGui::Checkbox("Statistics", &settings::menu::Statistics);
-		ImGui::Separator();
 		ImGui::Checkbox("Advanced Debug", &settings::menu::AdvancedDebug);
-		ImGui::Separator();
 		ImGui::Checkbox("Player List Viewer", &settings::menu::PlayerList);
-		ImGui::Separator();
 		ImGui::Checkbox("Internals", &settings::menu::Internals);
 		ImGui::Separator();
+
+		ImGui::SetCursorPos(ImVec2(630, 310));
+		ImGui::Separator(); // why does this one not show?
 		ImGui::Separator();
-		ImGui::Checkbox("Fuser Mode", &settings::config::Fuser);
+		ImGui::Text("Configs");
+		if (ImGui::Button("Save"))
+			settings::saveConfig();
+		if (ImGui::Button("Load"))
+			settings::loadConfig();
+		ImGui::Text("");
+		ImGui::Text("");
 		ImGui::Separator();
+
 		ImGui::EndChild();
 
 	} ImGui::End();

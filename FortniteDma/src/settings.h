@@ -78,6 +78,10 @@ namespace settings {
 
 	// menus
 	namespace menu {
+		// temp
+		inline bool open = true;
+
+		// menus
 		inline bool AdvancedDebug = false;
 		inline bool PlayerList = false;
 		inline bool Statistics = false;
@@ -192,10 +196,12 @@ namespace settings {
 		inline bool Aimbot = true;
 		inline int AimFov = 100;
 		inline int AimSmoothing = 10;
+		inline int AimKey = 2;
 
 		// trigger
 		inline bool TriggerBot = true;
-		inline int TriggerDelay = 5; // ms
+		inline int TriggerDelay = 25; // ms
+		inline int TriggerKey = 2;
 
 		// esp
 		inline bool Skeleton = true;
@@ -211,11 +217,14 @@ namespace settings {
 
 		inline json toJson() {
 			return {
+				{"Fuser", Fuser},
 				{"Aimbot", Aimbot},
 				{"AimFov", AimFov},
 				{"AimSmoothing", AimSmoothing},
+				{"AimKey", AimKey},
 				{"TriggerBot", TriggerBot},
 				{"TriggerDelay", TriggerDelay},
+				{"TriggerKey", TriggerKey},
 				{"Skeleton", Skeleton},
 				{"Box", Box},
 				{"RadarX", RadarX},
@@ -227,10 +236,14 @@ namespace settings {
 			};
 		}
 		inline void fromJson(const json& j) {
+			if (j.contains("Fuser")) Fuser = j["Fuser"];
 			if (j.contains("Aimbot")) Aimbot = j["Aimbot"];
 			if (j.contains("AimFov")) AimFov = j["AimFov"];
 			if (j.contains("AimSmoothing")) AimSmoothing = j["AimSmoothing"];
+			if (j.contains("AimKey")) AimKey = j["AimKey"];
+			if (j.contains("TriggerBot")) TriggerBot = j["TriggerBot"];
 			if (j.contains("TriggerDelay")) TriggerDelay = j["TriggerDelay"];
+			if (j.contains("TriggerKey")) TriggerKey = j["TriggerKey"];
 			if (j.contains("AimFov")) AimFov = j["AimFov"];
 			if (j.contains("Skeleton")) Skeleton = j["Skeleton"];
 			if (j.contains("Box")) Box = j["Box"];
@@ -274,18 +287,30 @@ namespace settings {
 	}
 	
 #pragma region config
-	 inline bool saveConfig() {
-		dma::saveConfig();
-		menu::saveConfig();
-		kmbox::net::saveConfig();
-		config::saveConfig();
+	inline bool saveConfig() {
+		bool result = true;
+		if (!dma::saveConfig())
+			result = false;
+		if (!menu::saveConfig())
+			result = false;
+		if (!kmbox::net::saveConfig())
+			result = false;
+		if (!config::saveConfig())
+			result = false;
+		return result;
 	}
 
-	 inline bool loadConfig() {
-		dma::loadConfig();
-		menu::loadConfig();
-		kmbox::net::loadConfig();
-		config::loadConfig();
+	inline bool loadConfig() {
+		 bool result = true;
+		 if (!dma::loadConfig())
+			 result = false;
+		 if (!menu::loadConfig())
+			 result = false;
+		 if (!kmbox::net::loadConfig())
+			 result = false;
+		 if (!config::loadConfig())
+			 result = false;
+		 return result;
 	}
 #pragma endregion
 

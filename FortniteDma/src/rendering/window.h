@@ -132,6 +132,10 @@ bool InitWindow(HINSTANCE instance, INT cmd_show)
 	colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f, 0.1f, 0.13f, 1.0f };
 	colors[ImGuiCol_MenuBarBg] = ImVec4{ 0.16f, 0.16f, 0.21f, 1.0f };
 
+	// Child
+
+	colors[ImGuiCol_ChildBg] = ImVec4{ 0.1f, 0.1f, 0.13f, 0.6f };
+
 	// Border
 	colors[ImGuiCol_Border] = ImVec4{ 0.44f, 0.37f, 0.61f, 0.29f };
 	colors[ImGuiCol_BorderShadow] = ImVec4{ 0.0f, 0.0f, 0.0f, 0.24f };
@@ -204,6 +208,39 @@ bool InitWindow(HINSTANCE instance, INT cmd_show)
 
 	fonts::notosans_font = io.Fonts->AddFontFromMemoryTTF(fonts::notosans, sizeof(fonts::notosans), 18.5f);
 	fonts::typenatural_font = io.Fonts->AddFontFromMemoryTTF(fonts::typenatural, sizeof(fonts::typenatural), 18.5f);
+
+	// images
+	int image_width = 0, image_height = 0;
+	unsigned char* decodedData = stbi_load_from_memory(images::supernatural_image, sizeof(images::supernatural_image), &image_width, &image_height, NULL, 4);
+
+	if (decodedData) {
+		D3D11_TEXTURE2D_DESC textureDesc = {};
+		textureDesc.Width = image_width;
+		textureDesc.Height = image_height;
+		textureDesc.MipLevels = 1;
+		textureDesc.ArraySize = 1;
+		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		ID3D11Texture2D* pTexture = NULL;
+		D3D11_SUBRESOURCE_DATA subResource = {};
+		subResource.pSysMem = decodedData;
+		subResource.SysMemPitch = image_width * 4;
+		HRESULT hr = device->CreateTexture2D(&textureDesc, &subResource, &pTexture);
+		if (SUCCEEDED(hr)) {
+			device->CreateShaderResourceView(pTexture, nullptr, (ID3D11ShaderResourceView**)&images::supernatural);
+			pTexture->Release();
+		}
+		else {
+			std::cout << hue::yellow << "[/] " << hue::white << "Couldnt load an image" << std::endl;
+		}
+		
+		stbi_image_free(decodedData);
+	}
+	else {
+		std::cout << hue::yellow << "[/] " << hue::white << "Couldnt load an image" << std::endl;
+	}
 
 	return true;
 }

@@ -22,6 +22,9 @@
 #include <imgui/imgui_impl_win32.h>
 
 #include "rendering/Font.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "rendering/stb_image.h"
+#include "rendering/images.h"
 
 #include "menu/menu.h"
 
@@ -221,8 +224,11 @@ void mainFeatures() {
 
 void mainloop() {
 
-	// cant toogle menu rn
-	menu::Menu();
+	if (ImGui::IsKeyPressed(ImGuiKey_Insert))
+		settings::menu::open = !settings::menu::open;
+
+	if (settings::menu::open)
+		menu::Menu();
 
 	// fov idk where to put it
 	if (settings::config::Aimbot) ImGui::GetBackgroundDrawList()->AddCircle(ImVec2(settings::window::Width/2, settings::window::Height/2), settings::config::AimFov, ImColor(255,255,255,255), 1000, 1.f);

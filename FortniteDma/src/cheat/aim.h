@@ -27,7 +27,7 @@ namespace aim {
 		bool Targetting = false;
 		bool ValidTarget = true;
 
-		if (mem.IsKeyDown(VK_RBUTTON)) {
+		if (mem.IsKeyDown(settings::config::AimKey)) {
 			std::unordered_map<uintptr_t, PlayerCache> PlayerList = mainPlayerList;
 
 			if (target.PlayerState) {
@@ -130,7 +130,12 @@ namespace aim {
 			clicked = false;
 		}
 
-		if (mem.IsKeyDown(VK_RBUTTON)) {
+		static chrono::steady_clock::time_point lastClick = std::chrono::steady_clock::now();
+
+		if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - lastClick).count() < settings::config::TriggerDelay)
+			return;
+
+		if (mem.IsKeyDown(settings::config::TriggerKey)) {
 			std::unordered_map<uintptr_t, PlayerCache> PlayerList = mainPlayerList;
 
 			for (auto it : PlayerList) {
@@ -147,6 +152,7 @@ namespace aim {
 				if (player.TeamId == local_player::localTeam) continue;
 
 				if (isHit(player.Head3D)) {
+					lastClick = std::chrono::steady_clock::now();
 					if (settings::kmbox::NetKmbox) {
 						kmNet_mouse_left(true);
 						clicked = true;
