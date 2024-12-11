@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <wtypes.h>
 #include <corecrt_math.h>
+#include <chrono>
 
 #define M_PI 3.14159265358979323846
 
@@ -229,9 +230,10 @@ public:
 
 struct Camera
 {
-	Vector3 Location;
-	Vector3 Rotation;
-	float FieldOfView;
+	Vector3 Location{};
+	Vector3 Rotation{};
+	float FieldOfView = 0;
+	Vector3 LocationUnderReticle{};
 };
 
 struct FNRot
@@ -246,6 +248,8 @@ struct FNRot
 struct PlayerCache {
 	bool cached = true;
 	int useCount = 0;
+
+	chrono::system_clock::time_point lastUpdate = std::chrono::system_clock::now();
 
 	uintptr_t PlayerState = 0;
 	uintptr_t Pawn = 0;
@@ -303,6 +307,8 @@ struct PlayerCache {
 
 	// screen
 	Vector3 Head2D{};
+
+	Vector3 Top2D{};
 	Vector3 Bottom2D{};
 
 	Vector3 Hip2D{};
@@ -320,6 +326,7 @@ struct PlayerCache {
 	Vector3 LeftFoot2D{};
 	Vector3 RightFoot2D{};
 
+	Vector3 Aim{};
 };
 
 inline bool isPlayerValid(PlayerCache player) {

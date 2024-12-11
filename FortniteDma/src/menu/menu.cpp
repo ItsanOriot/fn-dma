@@ -44,8 +44,9 @@ void menu::Menu() {
 		ImGui::BeginChild("Aim", ImVec2(300, 460), ImGuiChildFlags_Border);
 		ImGui::Text("Aim");
 		ImGui::Separator();
-
-		ImGui::Text("no aim :(");
+		ImGui::Checkbox("Aimbot", &settings::config::Aimbot);
+		ImGui::SliderInt("Smoothness", &settings::config::AimSmoothing, 1, 100);
+		ImGui::SliderInt("FOV", &settings::config::AimFov, 1, settings::window::Height/2);
 		ImGui::Separator();
 
 		ImGui::SetCursorPos(ImVec2(10, 310));
@@ -76,6 +77,7 @@ void menu::Menu() {
 		if (ImGui::Button("Connect")) {
 			if (connect_net_kmbox(settings::kmbox::net::ip, settings::kmbox::net::port, settings::kmbox::net::uuid)) {
 				std::cout << hue::green << "[+] " << hue::white << "Kmbox net connected" << std::endl;
+				settings::kmbox::NetKmbox = true;
 				settings::kmbox::net::saveConfig();
 			}
 		}
@@ -87,7 +89,8 @@ void menu::Menu() {
 		ImGui::BeginChild("Esp", ImVec2(300, 460), ImGuiChildFlags_Border);
 		ImGui::Text("Esp");
 		ImGui::Separator();
-		ImGui::Checkbox("Skeleton", &settings::config::skeleton);
+		ImGui::Checkbox("Box", &settings::config::Box);
+		ImGui::Checkbox("Skeleton", &settings::config::Skeleton);
 		ImGui::Separator();
 
 
@@ -242,7 +245,7 @@ void menu::StatisticsWindow() {
 void menu::PlayerListWindow() {
 	ImVec2 size = ImVec2(510, 750);
 
-	std::unordered_map<uintptr_t, PlayerCache> PlayerList = readyCache;
+	std::unordered_map<uintptr_t, PlayerCache> PlayerList = mainPlayerList;
 	static uintptr_t selectedPlayer = 0;
 
 	// player list
@@ -392,6 +395,8 @@ void menu::AdvancedDebugWindow() {
 		ImGui::Text(std::format("Camera Rotation -> x: {:.2f} y: {:.2f}", mainCamera.Rotation.x, mainCamera.Rotation.y).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 20));
 		ImGui::Text(std::format("Camera FieldOfView -> {:.2f} ", mainCamera.FieldOfView).c_str());
+		ImGui::SetCursorPos(ImVec2(x, y += 20));
+		ImGui::Text(std::format("Location Under Reticle -> x: {:.2f} y: {:.2f} z: {:.2f}", mainCamera.LocationUnderReticle.x, mainCamera.LocationUnderReticle.y, mainCamera.LocationUnderReticle.z).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 20));
 		ImGui::Text(std::format("Seconds -> {:.2f}", point::Seconds).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 40));

@@ -39,7 +39,7 @@ inline void km_move(int X, int Y) {
 	send_command(hSerial, command.c_str());
 }
 
-inline void km_click(int clickDelay) {
+inline void km_click() {
 	std::string command = "km.click(0)\r\n";
 	send_command(hSerial, command.c_str());
 }

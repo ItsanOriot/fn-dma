@@ -4,7 +4,7 @@ namespace esp {
 	void renderPlayers()
 	{
 		// we make a copy of the cache we dont want modifications from elsewhere while using it
-		std::unordered_map<uintptr_t, PlayerCache> PlayerList = readyCache;
+		//std::unordered_map<uintptr_t, PlayerCache> PlayerList = mainPlayerList;
 
 		// stats
 		int playersRendered = 0;
@@ -14,7 +14,7 @@ namespace esp {
 		int teammatesSkipped = 0;
 		int bots = 0;
 
-		for (auto it : PlayerList) {
+		for (auto it : mainPlayerList) {
 			PlayerCache player = it.second;
 
 			playersLooped++;
@@ -59,9 +59,8 @@ namespace esp {
 
 			playersRendered++;
 
-
 			// skeleton
-			if (settings::config::skeleton)
+			if (settings::config::Skeleton)
 			{
 				// color
 				ImColor colSK = ImColor(255,0,0,255);
@@ -86,6 +85,22 @@ namespace esp {
 				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.LeftFoot2D.x, player.LeftFoot2D.y), ImVec2(player.LeftCalf2D.x, player.LeftCalf2D.y), colSK, tk);
 				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.RightFoot2D.x, player.RightFoot2D.y), ImVec2(player.RightCalf2D.x, player.RightCalf2D.y), colSK, tk);
 			}
+
+			// box
+			if (settings::config::Box)
+			{
+				ImColor colSK = ImColor(255, 0, 0, 255);
+				if (IsVis)
+					colSK = ImColor(0, 255, 0, 255);
+
+				float tk = 1.f;
+				float rd = 0.f;
+
+				float box_height = (abs(player.Top2D.y - player.Bottom2D.y));
+				float box_width = 0.5f * box_height;
+				ImGui::GetBackgroundDrawList()->AddRect(ImVec2(player.Bottom2D.x - box_width / 2, player.Bottom2D.y), ImVec2(player.Bottom2D.x + box_width / 2, player.Top2D.y), colSK, rd, 0, tk);
+
+			}
 			
 		}
 
@@ -96,6 +111,12 @@ namespace esp {
 		info::render::invalidPlayersLooped = invalidPlayersLooped;
 		info::render::teammatesSkipped = teammatesSkipped;
 		info::render::validBots = bots;
+	}
+
+	void Debug() 
+	{
+
+		
 
 	}
 }

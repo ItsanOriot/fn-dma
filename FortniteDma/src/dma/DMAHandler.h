@@ -241,6 +241,20 @@ public:
 	}
 
 	template<typename T>
+	T SReadsSuccess(VMMDLL_SCATTER_HANDLE handle, uint64_t ptr, T value) {
+		T buff;
+		DWORD pcbRead;
+		if (!VMMDLL_Scatter_Read(handle, ptr, sizeof(T), reinterpret_cast<PBYTE>(&buff), &pcbRead)) {
+			//std::cout << "Scatter read failed." << std::endl;
+		}
+		if (pcbRead == sizeof(T)) {
+			//std::cout << "Partial Scatter read." << std::endl;
+			value = buff;
+		}
+		return value;
+	}
+
+	template<typename T>
 	void SReadArray(VMMDLL_SCATTER_HANDLE handle, uint64_t ptr, T* buff, size_t size) {
 		DWORD pcbRead;
 		if (!VMMDLL_Scatter_Read(handle, ptr, size, reinterpret_cast<PBYTE>(buff), &pcbRead)) {

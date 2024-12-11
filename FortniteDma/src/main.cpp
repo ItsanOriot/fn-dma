@@ -17,6 +17,7 @@
 #include "performance.h"
 
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 #include <imgui/imgui_impl_dx11.h>
 #include <imgui/imgui_impl_win32.h>
 
@@ -32,6 +33,7 @@
 #include "kmbox/kmbox_util.h"
 
 #include "cheat/cheat.h"
+#include "cheat/aim.h"
 #include "cheat/radar.h"
 #include "cheat/esp.h"
 
@@ -39,10 +41,11 @@ vector<feature> memoryList;
 vector<feature> mainList;
 
 void memRefreshLight() {
-	//auto start = std::chrono::high_resolution_clock::now();
 	mem.RefreshLight();
-	//__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
-	//std::cout << "took -> " << elapsed << "ms" << std::endl;
+}
+
+void memKeysUpdate() {
+	mem.UpdateKeys();
 }
 
 bool on_initialize() {
@@ -58,8 +61,10 @@ bool on_initialize() {
 
 	std::cout << hue::green << "[+] " << hue::white << "Initialized VMMDLL" << std::endl;
 
+
+	// retry 5 times but when it doesnt want to work it just doesnt
 	bool fixedDtb = false;
-	for (int i = 0; i < 20 && !fixedDtb; i++) {
+	for (int i = 0; i < 5 && !fixedDtb; i++) {
 		if (mem.FixDTB())
 			fixedDtb = true;
 	}
@@ -114,7 +119,7 @@ bool on_initialize() {
 
 	// memory features
 	{
-		// refresh memory LOW/MID PRIORITY
+		// refresh memory LOW PRIORITY
 		feature RefreshLight = { memRefreshLight , 1, 5000 };
 		memoryList.push_back(RefreshLight);
 
@@ -125,6 +130,10 @@ bool on_initialize() {
 		// update player list MID PRIORITY
 		feature PlayerListUpdate = { updatePlayerList , 1, 1000 };
 		memoryList.push_back(PlayerListUpdate);
+
+		// update keys MID/HIGH PRIORITY
+		feature KeysUpdate = { memKeysUpdate , 1, 5 };
+		memoryList.push_back(KeysUpdate);
 
 		// update camera location and rotation HIGH PRIORITY
 		feature CameraUpdate = { updateCamera , 1, 0 };
@@ -141,7 +150,19 @@ bool on_initialize() {
 		feature HealthCheck = { healthChecks, 1, 100 };
 		mainList.push_back(HealthCheck);
 
+		// aimbot
+		feature Aimbot = { aim::updateAimbot, 1, 10};
+		mainList.push_back(Aimbot);
+
+		// triggerbot
+		feature Triggerbot = { aim::updateTriggerBot, 1, 5 };
+		mainList.push_back(Triggerbot);
+
 		// drawing features must be run every loop
+
+		// debugging drawings
+		feature Debug = { esp::Debug, 1, 0 };
+		mainList.push_back(Debug);
 
 		// radar
 		feature Radar = { radar::Render, 1, 0 };
@@ -202,6 +223,9 @@ void mainloop() {
 
 	// cant toogle menu rn
 	menu::Menu();
+
+	// fov idk where to put it
+	if (settings::config::Aimbot) ImGui::GetBackgroundDrawList()->AddCircle(ImVec2(settings::window::Width/2, settings::window::Height/2), settings::config::AimFov, ImColor(255,255,255,255), 1000, 1.f);
 
 	mainFeatures();
 

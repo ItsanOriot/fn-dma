@@ -11,9 +11,9 @@ namespace local_player {
 
 inline Camera mainCamera;
 
-inline std::unordered_map<uintptr_t, PlayerCache> newCache; // this cache is constantly updated by the memory thread
+inline std::unordered_map<uintptr_t, PlayerCache> mainPlayerList; // global player cache
 
-inline std::unordered_map<uintptr_t, PlayerCache> readyCache; // this cache is a copy of newCache that is always complete and not being worked on directly
+//inline std::unordered_map<uintptr_t, PlayerCache> readyCache; // this cache is a copy of newCache that is always complete and not being worked on directly
 
 namespace point {
     inline uintptr_t va_text = 0;

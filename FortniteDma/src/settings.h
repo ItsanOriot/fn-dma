@@ -185,8 +185,21 @@ namespace settings {
 	}
 
 	namespace config {
+		// misc
+		inline bool Fuser = false;
+
+		// aim
+		inline bool Aimbot = true;
+		inline int AimFov = 100;
+		inline int AimSmoothing = 10;
+
+		// trigger
+		inline bool TriggerBot = true;
+		inline int TriggerDelay = 5; // ms
+
 		// esp
-		inline bool skeleton = true;
+		inline bool Skeleton = true;
+		inline bool Box = true;
 
 		// radar
 		inline int RadarX = 30;
@@ -198,7 +211,13 @@ namespace settings {
 
 		inline json toJson() {
 			return {
-				{"Skeleton", skeleton},
+				{"Aimbot", Aimbot},
+				{"AimFov", AimFov},
+				{"AimSmoothing", AimSmoothing},
+				{"TriggerBot", TriggerBot},
+				{"TriggerDelay", TriggerDelay},
+				{"Skeleton", Skeleton},
+				{"Box", Box},
 				{"RadarX", RadarX},
 				{"RadarY", RadarY},
 				{"RadarXSize", RadarXSize},
@@ -208,7 +227,13 @@ namespace settings {
 			};
 		}
 		inline void fromJson(const json& j) {
-			if (j.contains("Skeleton")) skeleton = j["Skeleton"];
+			if (j.contains("Aimbot")) Aimbot = j["Aimbot"];
+			if (j.contains("AimFov")) AimFov = j["AimFov"];
+			if (j.contains("AimSmoothing")) AimSmoothing = j["AimSmoothing"];
+			if (j.contains("TriggerDelay")) TriggerDelay = j["TriggerDelay"];
+			if (j.contains("AimFov")) AimFov = j["AimFov"];
+			if (j.contains("Skeleton")) Skeleton = j["Skeleton"];
+			if (j.contains("Box")) Box = j["Box"];
 			if (j.contains("RadarX")) RadarX = j["RadarX"];
 			if (j.contains("RadarY")) RadarY = j["RadarY"];
 			if (j.contains("RadarXSize")) RadarXSize = j["RadarXSize"];

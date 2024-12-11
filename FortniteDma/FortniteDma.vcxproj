@@ -172,6 +172,7 @@
     <ClInclude Include="external\json.hpp" />
     <ClInclude Include="external\leechcore.h" />
     <ClInclude Include="external\vmmdll.h" />
+    <ClInclude Include="src\cheat\aim.h" />
     <ClInclude Include="src\cheat\cheat.h" />
     <ClInclude Include="src\cheat\esp.h" />
     <ClInclude Include="src\cheat\global.h" />

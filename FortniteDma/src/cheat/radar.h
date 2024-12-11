@@ -94,15 +94,25 @@ namespace radar {
 
 	void Render()
 	{
+		std::unordered_map<uintptr_t, PlayerCache> PlayerList = mainPlayerList;
+
 		// draw the radar
 		DrawHUD(settings::config::RadarX, settings::config::RadarY, settings::config::RadarXSize, settings::config::RadarYSize);
 
 		// draw the points in the radar
-		for (auto it : readyCache) {
+		for (auto it : PlayerList) {
 			PlayerCache player = it.second;
 
 			if (!isPlayerValid(player))
 				continue;
+
+			if (player.PlayerState == point::PlayerState) {
+				continue;
+			}
+
+			if (point::Player && player.TeamId == local_player::localTeam) {
+				continue;
+			}
 
 			// should be in the updates
 			bool IsVis = point::Seconds - player.last_render <= 0.06f;
@@ -115,9 +125,9 @@ namespace radar {
 			if (IsVis)
 				color = ImColor(0, 255, 0, 255);
 
-			//// orange knocked players
-			//if (player.isDBNO)
-			//	color = ImColor(255, 100, 0, 255);
+			// orange knocked players
+			if (player.isDBNO)
+				color = ImColor(255, 100, 0, 255);
 
 			// blue bots
 			if (player.isBot)

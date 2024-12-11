@@ -230,7 +230,11 @@ bool UpdateWindow(void (*mainfunc)()) {
 
 	ImGui::Render();
 
-	constexpr float color[4]{ 0.f,0.f, 0.f, 0.f }; //color of background. last param is opacity. i have it transparent rn so u can see the console but we will set to 1 when we wanna use it
+	float color[4]{ 0.f,0.f, 0.f, 0.f }; //color of background. last param is opacity. i have it transparent rn so u can see the console but we will set to 1 when we wanna use it
+	
+	if (settings::config::Fuser)
+		color[3] = 1.f;
+
 	device_context->OMSetRenderTargets(1U, &render_target_view, nullptr);
 	device_context->ClearRenderTargetView(render_target_view, color);
 

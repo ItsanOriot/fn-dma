@@ -182,6 +182,10 @@ void updateCamera()
 	// while we are at it update seconds for vischeck
 	mem.SPrepare(mem.hS2, point::Uworld + offsets::Seconds, sizeof(double));
 
+	// and location under reticle
+	if (point::PlayerController)
+		mem.SPrepare(mem.hS2, point::PlayerController + offsets::LocationUnderReticle, sizeof(Vector3));
+
 	mem.ExecuteMemoryReads(mem.hS2);
 
 	rotation = mem.SReads<FNRot>(mem.hS2, point::RotationPointer);
@@ -191,6 +195,9 @@ void updateCamera()
 	mainCamera.FieldOfView = mem.SReads<float>(mem.hS2, point::LocalPlayer + offsets::FieldOfView);
 
 	point::Seconds = mem.SReads<double>(mem.hS2, point::Uworld + offsets::Seconds);
+
+	if (point::PlayerController)
+		mainCamera.LocationUnderReticle = mem.SReads<Vector3>(mem.hS2, point::PlayerController + offsets::LocationUnderReticle);
 
 	// fix rotation ?
 	mainCamera.Rotation.x = asin(rotation.c) * (180.0 / M_PI);
@@ -228,8 +235,8 @@ void updatePlayerList()
 	mem.ReadA(playerArray.data, players.get(), playerArray.count * sizeof(uintptr_t));
 
 	// clean cache off of people that dont exist anymore
-	auto it = newCache.begin();
-	while (it != newCache.end()) {
+	auto it = mainPlayerList.begin();
+	while (it != mainPlayerList.end()) {
 		//PlayerCache cachedPlayer = it->second;
 		bool found = false;
 		for (int i = 0; i < playerArray.count; i++) {
@@ -239,7 +246,7 @@ void updatePlayerList()
 			}
 		}
 		if (!found) {
-			it = newCache.erase(it);
+			it = mainPlayerList.erase(it);
 		}
 		else {
 			++it;
@@ -252,8 +259,8 @@ void updatePlayerList()
 	for (int i = 0; i < playerArray.count; i++) {
 		if (!players[i])
 			continue;
-		auto it = newCache.find(players[i]);
-		if (it == newCache.end()) {
+		auto it = mainPlayerList.find(players[i]);
+		if (it == mainPlayerList.end()) {
 			PlayerCache newPlayer;
 			newPlayer.PlayerState = players[i];
 			playersToAdd.push_back(newPlayer);
@@ -296,7 +303,7 @@ void updatePlayerList()
 			playersToAdd[i].Mesh = mem.SReads<uintptr_t>(mem.hS3, playersToAdd[i].Pawn + offsets::Mesh);
 			playersToAdd[i].RootComponent = mem.SReads<uintptr_t>(mem.hS3, playersToAdd[i].Pawn + offsets::RootComponent);
 			playersToAdd[i].isDying = mem.SReads<BYTE>(mem.hS3, playersToAdd[i].Pawn + offsets::isDying) & 0x20;
-			playersToAdd[i].isDBNO = mem.SReads<BYTE>(mem.hS3, playersToAdd[i].Pawn + offsets::IsDBNO) & 0x20;
+			playersToAdd[i].isDBNO = mem.SReads<BYTE>(mem.hS3, playersToAdd[i].Pawn + offsets::IsDBNO) & 0x40;
 		}
 
 
@@ -402,7 +409,7 @@ void updatePlayerList()
 
 		// now that we have everything we just add them to the cache
 		for (int i = 0; i < playersToAdd.size(); i++) {
-			newCache[playersToAdd[i].PlayerState] = playersToAdd[i];
+			mainPlayerList[playersToAdd[i].PlayerState] = playersToAdd[i];
 		}
 	}
 
@@ -410,6 +417,123 @@ END:
 
 	__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
 	stats::updatePlayerListData.addValue(static_cast<float>(elapsed));
+}
+
+#include <execution>
+
+void prepareCacheTask(std::unordered_map<uintptr_t, PlayerCache>& cache) {
+	for (auto it = cache.begin(); it != cache.end(); ++it) {
+		if (it->second.BoneArray) {
+			mem.SPrepare(mem.hS4, it->second.BoneArray, (82 * 0x60) + sizeof(FTransform));
+		}
+		if (it->second.PlayerState) {
+			mem.SPrepare(mem.hS4, it->second.PlayerState + offsets::PawnPrivate, sizeof(uintptr_t));
+		}
+		if (it->second.Pawn) {
+			mem.SPrepare(mem.hS4, it->second.Pawn + offsets::Mesh, sizeof(uintptr_t));
+			mem.SPrepare(mem.hS4, it->second.Pawn + offsets::RootComponent, sizeof(uintptr_t));
+			mem.SPrepare(mem.hS4, it->second.Pawn + offsets::isDying, sizeof(BYTE));
+			mem.SPrepare(mem.hS4, it->second.Pawn + offsets::IsDBNO, sizeof(BYTE));
+		}
+		if (it->second.Mesh) {
+			mem.SPrepare(mem.hS4, it->second.Mesh + offsets::BoneArray, 0x18);
+			mem.SPrepare(mem.hS4, it->second.Mesh + offsets::ComponetToWorld, sizeof(FTransform));
+			mem.SPrepare(mem.hS4, it->second.Mesh + offsets::LastRenderTime, sizeof(float));
+		}
+		if (it->second.RootComponent) {
+			mem.SPrepare(mem.hS4, it->second.RootComponent + offsets::Velocity, sizeof(Vector3));
+		}
+	}
+}
+
+void readCacheTask(std::unordered_map<uintptr_t, PlayerCache>& cache) {
+	for (auto it = cache.begin(); it != cache.end(); ++it) {
+		if (it->second.BoneArray) {
+			it->second.HeadBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (68 * 0x60), it->second.HeadBone);
+			it->second.BottomBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (0 * 0x60), it->second.BottomBone);
+			it->second.NeckBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (66 * 0x60), it->second.NeckBone);
+			it->second.HipBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (2 * 0x60), it->second.HipBone);
+			it->second.UpperArmLeftBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (9 * 0x60), it->second.UpperArmLeftBone);
+			it->second.UpperArmRightBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (38 * 0x60), it->second.UpperArmRightBone);
+			it->second.LeftHandBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (10 * 0x60), it->second.LeftHandBone);
+			it->second.RightHandBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (39 * 0x60), it->second.RightHandBone);
+			it->second.LeftHandTBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (11 * 0x60), it->second.LeftHandTBone);
+			it->second.RightHandTBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (40 * 0x60), it->second.RightHandTBone);
+			it->second.RightThighBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (78 * 0x60), it->second.RightThighBone);
+			it->second.LeftThighBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (71 * 0x60), it->second.LeftThighBone);
+			it->second.RightCalfBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (79 * 0x60), it->second.RightCalfBone);
+			it->second.LeftCalfBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (72 * 0x60), it->second.LeftCalfBone);
+			it->second.LeftFootBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (75 * 0x60), it->second.LeftFootBone);
+			it->second.RightFootBone = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.BoneArray + (82 * 0x60), it->second.RightFootBone);
+		}
+
+		if (it->second.PlayerState) {
+			it->second.Pawn = mem.SReadsSuccess<uintptr_t>(mem.hS4, it->second.PlayerState + offsets::PawnPrivate, it->second.Pawn);
+		}
+
+		if (it->second.Pawn) {
+			it->second.Mesh = mem.SReadsSuccess<uintptr_t>(mem.hS4, it->second.Pawn + offsets::Mesh, it->second.Mesh);
+			it->second.RootComponent = mem.SReadsSuccess<uintptr_t>(mem.hS3, it->second.Pawn + offsets::RootComponent, it->second.RootComponent);
+			it->second.isDying = mem.SReadsSuccess<BYTE>(mem.hS4, it->second.Pawn + offsets::isDying, it->second.isDying) & 0x20;
+			it->second.isDBNO = mem.SReadsSuccess<BYTE>(mem.hS4, it->second.Pawn + offsets::IsDBNO, it->second.isDBNO) & 0x40;
+		}
+
+		if (it->second.Mesh) {
+			it->second.BoneArray1 = mem.SReadsSuccess<uintptr_t>(mem.hS4, it->second.Mesh + offsets::BoneArray, it->second.BoneArray1);
+			it->second.BoneArray2 = mem.SReadsSuccess<uintptr_t>(mem.hS4, it->second.Mesh + offsets::BoneArray + 0x10, it->second.BoneArray2);
+			it->second.BoneArray = it->second.BoneArray1;
+			if (!it->second.BoneArray) it->second.BoneArray = it->second.BoneArray2;
+			it->second.component_to_world = mem.SReadsSuccess<FTransform>(mem.hS4, it->second.Mesh + offsets::ComponetToWorld, it->second.component_to_world);
+			it->second.last_render = mem.SReadsSuccess<float>(mem.hS4, it->second.Mesh + offsets::LastRenderTime, it->second.last_render);
+		}
+
+		if (it->second.RootComponent) {
+			it->second.Velocity = mem.SReadsSuccess<Vector3>(mem.hS4, it->second.RootComponent + offsets::Velocity, it->second.Velocity);
+		}
+
+		// while we are at it do all the players w2s and calculate with matrix the bone positions
+		{
+			// get bones world position
+			it->second.Head3D = CalcMatrix(it->second.HeadBone, it->second.component_to_world);
+			it->second.Bottom3D = CalcMatrix(it->second.BottomBone, it->second.component_to_world);
+
+			it->second.Hip3D = CalcMatrix(it->second.HipBone, it->second.component_to_world);
+			it->second.Neck3D = CalcMatrix(it->second.NeckBone, it->second.component_to_world);
+			it->second.UpperArmLeft3D = CalcMatrix(it->second.UpperArmLeftBone, it->second.component_to_world);
+			it->second.UpperArmRight3D = CalcMatrix(it->second.UpperArmRightBone, it->second.component_to_world);
+			it->second.LeftHand3D = CalcMatrix(it->second.LeftHandBone, it->second.component_to_world);
+			it->second.RightHand3D = CalcMatrix(it->second.RightHandBone, it->second.component_to_world);
+			it->second.LeftHandT3D = CalcMatrix(it->second.LeftHandTBone, it->second.component_to_world);
+			it->second.RightHandT3D = CalcMatrix(it->second.RightHandTBone, it->second.component_to_world);
+			it->second.RightThigh3D = CalcMatrix(it->second.RightThighBone, it->second.component_to_world);
+			it->second.LeftThigh3D = CalcMatrix(it->second.LeftThighBone, it->second.component_to_world);
+			it->second.RightCalf3D = CalcMatrix(it->second.RightCalfBone, it->second.component_to_world);
+			it->second.LeftCalf3D = CalcMatrix(it->second.LeftCalfBone, it->second.component_to_world);
+			it->second.LeftFoot3D = CalcMatrix(it->second.LeftFootBone, it->second.component_to_world);
+			it->second.RightFoot3D = CalcMatrix(it->second.RightFootBone, it->second.component_to_world);
+
+			// and do world to screen
+			it->second.Head2D = w2s(it->second.Head3D);
+
+			it->second.Top2D = w2s(Vector3(it->second.Head3D.x, it->second.Head3D.y, it->second.Head3D.z + 15.f));
+			it->second.Bottom2D = w2s(it->second.Bottom3D);
+
+			it->second.Hip2D = w2s(it->second.Hip3D);
+			it->second.Neck2D = w2s(it->second.Neck3D);
+			it->second.UpperArmLeft2D = w2s(it->second.UpperArmLeft3D);
+			it->second.UpperArmRight2D = w2s(it->second.UpperArmRight3D);
+			it->second.LeftHand2D = w2s(it->second.LeftHand3D);
+			it->second.RightHand2D = w2s(it->second.RightHand3D);
+			it->second.LeftHandT2D = w2s(it->second.LeftHandT3D);
+			it->second.RightHandT2D = w2s(it->second.RightHandT3D);
+			it->second.RightThigh2D = w2s(it->second.RightThigh3D);
+			it->second.LeftThigh2D = w2s(it->second.LeftThigh3D);
+			it->second.RightCalf2D = w2s(it->second.RightCalf3D);
+			it->second.LeftCalf2D = w2s(it->second.LeftCalf3D);
+			it->second.LeftFoot2D = w2s(it->second.LeftFoot3D);
+			it->second.RightFoot2D = w2s(it->second.RightFoot3D);
+		}
+	}
 }
 
 void updatePlayers()
@@ -421,136 +545,135 @@ void updatePlayers()
 	}
 
 	// are there any players
-	if (newCache.size() > 0) {
+	if (mainPlayerList.size() > 0) {
 		mem.SClear(mem.hS4);
-		// prepare all the reads
-		auto it = newCache.begin();
-		while (it != newCache.end()) {
 
-			if (it->second.BoneArray) {
-				mem.SPrepare(mem.hS4, it->second.BoneArray, (82 * 0x60) + sizeof(FTransform));
+		// prepare all the reads in parallel
+		std::for_each(std::execution::par, mainPlayerList.begin(), mainPlayerList.end(), [&](auto& it) {
+			if (it.second.BoneArray) {
+				mem.SPrepare(mem.hS4, it.second.BoneArray, (82 * 0x60) + sizeof(FTransform));
 			}
-
-			if (it->second.PlayerState) {
-				mem.SPrepare(mem.hS4, it->second.PlayerState + offsets::PawnPrivate,sizeof(uintptr_t));
+			if (it.second.PlayerState) {
+				mem.SPrepare(mem.hS4, it.second.PlayerState + offsets::PawnPrivate, sizeof(uintptr_t));
 			}
-
-			if (it->second.Pawn) {
-				mem.SPrepare(mem.hS4, it->second.Pawn + offsets::Mesh, sizeof(uintptr_t));
-				mem.SPrepare(mem.hS3, it->second.Pawn + offsets::RootComponent, sizeof(uintptr_t));
-				mem.SPrepare(mem.hS4, it->second.Pawn + offsets::isDying, sizeof(BYTE));
-				mem.SPrepare(mem.hS4, it->second.Pawn + offsets::IsDBNO, sizeof(BYTE));
+			if (it.second.Pawn) {
+				mem.SPrepare(mem.hS4, it.second.Pawn + offsets::Mesh, sizeof(uintptr_t));
+				mem.SPrepare(mem.hS4, it.second.Pawn + offsets::RootComponent, sizeof(uintptr_t));
+				mem.SPrepare(mem.hS4, it.second.Pawn + offsets::isDying, sizeof(BYTE));
+				mem.SPrepare(mem.hS4, it.second.Pawn + offsets::IsDBNO, sizeof(BYTE));
 			}
-
-			if (it->second.Mesh) {
-				mem.SPrepare(mem.hS4, it->second.Mesh + offsets::BoneArray, 0x18); // includes both
-				//mem.SPrepare(mem.hS3, it->second.Mesh + offsets::BoneArray + 0x10, sizeof(uintptr_t));
-				mem.SPrepare(mem.hS4, it->second.Mesh + offsets::ComponetToWorld, sizeof(FTransform));
-				mem.SPrepare(mem.hS4, it->second.Mesh + offsets::LastRenderTime, sizeof(float));
+			if (it.second.Mesh) {
+				mem.SPrepare(mem.hS4, it.second.Mesh + offsets::BoneArray, 0x18);
+				mem.SPrepare(mem.hS4, it.second.Mesh + offsets::ComponetToWorld, sizeof(FTransform));
+				mem.SPrepare(mem.hS4, it.second.Mesh + offsets::LastRenderTime, sizeof(float));
 			}
-
-			if (it->second.RootComponent) {
-				mem.SPrepare(mem.hS4, it->second.RootComponent + offsets::Velocity, sizeof(Vector3));
+			if (it.second.RootComponent) {
+				mem.SPrepare(mem.hS4, it.second.RootComponent + offsets::Velocity, sizeof(Vector3));
 			}
+		});
 
-			++it;
-		}
 
 		// EXECUTE AHAHAHAHHAHAH
 		mem.ExecuteMemoryReads(mem.hS4);
 
-		it = newCache.begin();
-		while (it != newCache.end()) {
 
-			if (it->second.BoneArray) {
-				it->second.HeadBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (68 * 0x60));
-				it->second.BottomBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (0 * 0x60));
-				it->second.NeckBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (66 * 0x60));
-				it->second.HipBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (2 * 0x60));
-				it->second.UpperArmLeftBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (9 * 0x60));
-				it->second.UpperArmRightBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (38 * 0x60));
-				it->second.LeftHandBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (10 * 0x60));
-				it->second.RightHandBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (39 * 0x60));
-				it->second.LeftHandTBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (11 * 0x60));
-				it->second.RightHandTBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (40 * 0x60));
-				it->second.RightThighBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (78 * 0x60));
-				it->second.LeftThighBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (71 * 0x60));
-				it->second.RightCalfBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (79 * 0x60));
-				it->second.LeftCalfBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (72 * 0x60));
-				it->second.LeftFootBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (75 * 0x60));
-				it->second.RightFootBone = mem.SReads<FTransform>(mem.hS4, it->second.BoneArray + (82 * 0x60));
+		// all reads in parallel
+		std::for_each(std::execution::par, mainPlayerList.begin(), mainPlayerList.end(), [&](auto& it) {
+
+			it.second.lastUpdate = chrono::system_clock::now();
+
+			if (it.second.BoneArray) {
+				it.second.HeadBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (68 * 0x60), it.second.HeadBone);
+				it.second.BottomBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (0 * 0x60), it.second.BottomBone);
+				it.second.NeckBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (66 * 0x60), it.second.NeckBone);
+				it.second.HipBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (2 * 0x60), it.second.HipBone);
+				it.second.UpperArmLeftBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (9 * 0x60), it.second.UpperArmLeftBone);
+				it.second.UpperArmRightBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (38 * 0x60), it.second.UpperArmRightBone);
+				it.second.LeftHandBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (10 * 0x60), it.second.LeftHandBone);
+				it.second.RightHandBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (39 * 0x60), it.second.RightHandBone);
+				it.second.LeftHandTBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (11 * 0x60), it.second.LeftHandTBone);
+				it.second.RightHandTBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (40 * 0x60), it.second.RightHandTBone);
+				it.second.RightThighBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (78 * 0x60), it.second.RightThighBone);
+				it.second.LeftThighBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (71 * 0x60), it.second.LeftThighBone);
+				it.second.RightCalfBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (79 * 0x60), it.second.RightCalfBone);
+				it.second.LeftCalfBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (72 * 0x60), it.second.LeftCalfBone);
+				it.second.LeftFootBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (75 * 0x60), it.second.LeftFootBone);
+				it.second.RightFootBone = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.BoneArray + (82 * 0x60), it.second.RightFootBone);
 			}
 
-			if (it->second.PlayerState) {
-				it->second.Pawn = mem.SReads<uintptr_t>(mem.hS4, it->second.PlayerState + offsets::PawnPrivate);
+			if (it.second.PlayerState) {
+				it.second.Pawn = mem.SReadsSuccess<uintptr_t>(mem.hS4, it.second.PlayerState + offsets::PawnPrivate, it.second.Pawn);
 			}
 
-			if (it->second.Pawn) {
-				it->second.Mesh = mem.SReads<uintptr_t>(mem.hS4, it->second.Pawn + offsets::Mesh);
-				it->second.RootComponent = mem.SReads<uintptr_t>(mem.hS3, it->second.Pawn + offsets::RootComponent);
-				it->second.isDying = mem.SReads<BYTE>(mem.hS4, it->second.Pawn + offsets::isDying) & 0x20;
-				it->second.isDBNO = mem.SReads<BYTE>(mem.hS4, it->second.Pawn + offsets::IsDBNO) & 0x20;
+			if (it.second.Pawn) {
+				it.second.Mesh = mem.SReadsSuccess<uintptr_t>(mem.hS4, it.second.Pawn + offsets::Mesh, it.second.Mesh);
+				it.second.RootComponent = mem.SReadsSuccess<uintptr_t>(mem.hS3, it.second.Pawn + offsets::RootComponent, it.second.RootComponent);
+				it.second.isDying = mem.SReadsSuccess<BYTE>(mem.hS4, it.second.Pawn + offsets::isDying, it.second.isDying) & 0x20;
+				it.second.isDBNO = mem.SReadsSuccess<BYTE>(mem.hS4, it.second.Pawn + offsets::IsDBNO, it.second.isDBNO) & 0x20;
 			}
 
-			if (it->second.Mesh) {
-				it->second.BoneArray1 = mem.SReads<uintptr_t>(mem.hS4, it->second.Mesh + offsets::BoneArray);
-				it->second.BoneArray2 = mem.SReads<uintptr_t>(mem.hS4, it->second.Mesh + offsets::BoneArray + 0x10);
-				it->second.BoneArray = it->second.BoneArray1;
-				if (!it->second.BoneArray) it->second.BoneArray = it->second.BoneArray2;
-				it->second.component_to_world = mem.SReads<FTransform>(mem.hS4, it->second.Mesh + offsets::ComponetToWorld);
-				it->second.last_render = mem.SReads<float>(mem.hS4, it->second.Mesh + offsets::LastRenderTime);
+			if (it.second.Mesh) {
+				it.second.BoneArray1 = mem.SReadsSuccess<uintptr_t>(mem.hS4, it.second.Mesh + offsets::BoneArray, it.second.BoneArray1);
+				it.second.BoneArray2 = mem.SReadsSuccess<uintptr_t>(mem.hS4, it.second.Mesh + offsets::BoneArray + 0x10, it.second.BoneArray2);
+				it.second.BoneArray = it.second.BoneArray1;
+				if (!it.second.BoneArray) it.second.BoneArray = it.second.BoneArray2;
+				it.second.component_to_world = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.Mesh + offsets::ComponetToWorld, it.second.component_to_world);
+				it.second.last_render = mem.SReadsSuccess<float>(mem.hS4, it.second.Mesh + offsets::LastRenderTime, it.second.last_render);
 			}
 
-			if (it->second.RootComponent) {
-				it->second.Velocity = mem.SReads<Vector3>(mem.hS4, it->second.RootComponent + offsets::Velocity);
+			if (it.second.RootComponent) {
+				it.second.Velocity = mem.SReadsSuccess<Vector3>(mem.hS4, it.second.RootComponent + offsets::Velocity, it.second.Velocity);
 			}
 
 			// while we are at it do all the players w2s and calculate with matrix the bone positions
 			{
 				// get bones world position
-				it->second.Head3D = CalcMatrix(it->second.HeadBone, it->second.component_to_world);
-				it->second.Bottom3D = CalcMatrix(it->second.BottomBone, it->second.component_to_world);
+				it.second.Head3D = CalcMatrix(it.second.HeadBone, it.second.component_to_world);
+				it.second.Bottom3D = CalcMatrix(it.second.BottomBone, it.second.component_to_world);
 
-				it->second.Hip3D  = CalcMatrix(it->second.HipBone, it->second.component_to_world);
-				it->second.Neck3D  = CalcMatrix(it->second.NeckBone, it->second.component_to_world);
-				it->second.UpperArmLeft3D  = CalcMatrix(it->second.UpperArmLeftBone, it->second.component_to_world);
-				it->second.UpperArmRight3D  = CalcMatrix(it->second.UpperArmRightBone, it->second.component_to_world);
-				it->second.LeftHand3D  = CalcMatrix(it->second.LeftHandBone, it->second.component_to_world);
-				it->second.RightHand3D  = CalcMatrix(it->second.RightHandBone, it->second.component_to_world);
-				it->second.LeftHandT3D  = CalcMatrix(it->second.LeftHandTBone, it->second.component_to_world);
-				it->second.RightHandT3D  = CalcMatrix(it->second.RightHandTBone, it->second.component_to_world);
-				it->second.RightThigh3D  = CalcMatrix(it->second.RightThighBone, it->second.component_to_world);
-				it->second.LeftThigh3D  = CalcMatrix(it->second.LeftThighBone, it->second.component_to_world);
-				it->second.RightCalf3D  = CalcMatrix(it->second.RightCalfBone, it->second.component_to_world);
-				it->second.LeftCalf3D  = CalcMatrix(it->second.LeftCalfBone, it->second.component_to_world);
-				it->second.LeftFoot3D  = CalcMatrix(it->second.LeftFootBone, it->second.component_to_world);
-				it->second.RightFoot3D = CalcMatrix(it->second.RightFootBone, it->second.component_to_world);
+				it.second.Hip3D  = CalcMatrix(it.second.HipBone, it.second.component_to_world);
+				it.second.Neck3D  = CalcMatrix(it.second.NeckBone, it.second.component_to_world);
+				it.second.UpperArmLeft3D  = CalcMatrix(it.second.UpperArmLeftBone, it.second.component_to_world);
+				it.second.UpperArmRight3D  = CalcMatrix(it.second.UpperArmRightBone, it.second.component_to_world);
+				it.second.LeftHand3D  = CalcMatrix(it.second.LeftHandBone, it.second.component_to_world);
+				it.second.RightHand3D  = CalcMatrix(it.second.RightHandBone, it.second.component_to_world);
+				it.second.LeftHandT3D  = CalcMatrix(it.second.LeftHandTBone, it.second.component_to_world);
+				it.second.RightHandT3D  = CalcMatrix(it.second.RightHandTBone, it.second.component_to_world);
+				it.second.RightThigh3D  = CalcMatrix(it.second.RightThighBone, it.second.component_to_world);
+				it.second.LeftThigh3D  = CalcMatrix(it.second.LeftThighBone, it.second.component_to_world);
+				it.second.RightCalf3D  = CalcMatrix(it.second.RightCalfBone, it.second.component_to_world);
+				it.second.LeftCalf3D  = CalcMatrix(it.second.LeftCalfBone, it.second.component_to_world);
+				it.second.LeftFoot3D  = CalcMatrix(it.second.LeftFootBone, it.second.component_to_world);
+				it.second.RightFoot3D = CalcMatrix(it.second.RightFootBone, it.second.component_to_world);
 
 				// and do world to screen
-				it->second.Head2D = w2s(it->second.Head3D);
-				it->second.Bottom2D = w2s(it->second.Bottom3D);
+				it.second.Head2D = w2s(it.second.Head3D);
 
-				it->second.Hip2D = w2s(it->second.Hip3D);
-				it->second.Neck2D = w2s(it->second.Neck3D);
-				it->second.UpperArmLeft2D = w2s(it->second.UpperArmLeft3D);
-				it->second.UpperArmRight2D = w2s(it->second.UpperArmRight3D);
-				it->second.LeftHand2D = w2s(it->second.LeftHand3D);
-				it->second.RightHand2D = w2s(it->second.RightHand3D);
-				it->second.LeftHandT2D = w2s(it->second.LeftHandT3D);
-				it->second.RightHandT2D = w2s(it->second.RightHandT3D);
-				it->second.RightThigh2D = w2s(it->second.RightThigh3D);
-				it->second.LeftThigh2D = w2s(it->second.LeftThigh3D);
-				it->second.RightCalf2D = w2s(it->second.RightCalf3D);
-				it->second.LeftCalf2D = w2s(it->second.LeftCalf3D);
-				it->second.LeftFoot2D = w2s(it->second.LeftFoot3D);
-				it->second.RightFoot2D = w2s(it->second.RightFoot3D);
+				it.second.Top2D = w2s(Vector3(it.second.Head3D.x, it.second.Head3D.y, it.second.Head3D.z + 15.f));
+				it.second.Bottom2D = w2s(it.second.Bottom3D);
+
+				it.second.Hip2D = w2s(it.second.Hip3D);
+				it.second.Neck2D = w2s(it.second.Neck3D);
+				it.second.UpperArmLeft2D = w2s(it.second.UpperArmLeft3D);
+				it.second.UpperArmRight2D = w2s(it.second.UpperArmRight3D);
+				it.second.LeftHand2D = w2s(it.second.LeftHand3D);
+				it.second.RightHand2D = w2s(it.second.RightHand3D);
+				it.second.LeftHandT2D = w2s(it.second.LeftHandT3D);
+				it.second.RightHandT2D = w2s(it.second.RightHandT3D);
+				it.second.RightThigh2D = w2s(it.second.RightThigh3D);
+				it.second.LeftThigh2D = w2s(it.second.LeftThigh3D);
+				it.second.RightCalf2D = w2s(it.second.RightCalf3D);
+				it.second.LeftCalf2D = w2s(it.second.LeftCalf3D);
+				it.second.LeftFoot2D = w2s(it.second.LeftFoot3D);
+				it.second.RightFoot2D = w2s(it.second.RightFoot3D);
 			}
 
-			++it;
-		}
+
+		});
+
 	}
 
-	readyCache = newCache;
+	//readyCache = newCache;
 
 END:
 
