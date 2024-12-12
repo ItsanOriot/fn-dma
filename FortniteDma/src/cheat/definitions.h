@@ -326,6 +326,7 @@ struct PlayerCache {
 	Vector3 LeftFoot2D{};
 	Vector3 RightFoot2D{};
 
+	bool UsedByAim = false;
 	Vector3 Aim{};
 };
 

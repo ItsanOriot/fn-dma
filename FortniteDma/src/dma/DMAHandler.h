@@ -181,6 +181,7 @@ public:
 	VMMDLL_SCATTER_HANDLE hS2 = NULL;
 	VMMDLL_SCATTER_HANDLE hS3 = NULL;
 	VMMDLL_SCATTER_HANDLE hS4 = NULL;
+	VMMDLL_SCATTER_HANDLE hS5 = NULL;
 
 	bool SCreate()
 	{
@@ -205,6 +206,12 @@ public:
 		hS4 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, 1);
 		if (hS4 == NULL) {
 			std::cout << hue::red << "[!] " << hue::white << "Failed to create scatter handle 4" << std::endl;
+			return false;
+		}
+
+		hS5 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, 1);
+		if (hS4 == NULL) {
+			std::cout << hue::red << "[!] " << hue::white << "Failed to create scatter handle 5" << std::endl;
 			return false;
 		}
 

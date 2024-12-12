@@ -4,6 +4,22 @@
 
 namespace aim {
 
+	Vector3 predictLocation(Vector3 target, Vector3 target_velocity, float projectile_speed, float projectile_gravity_scale, float distance)
+	{
+		if (projectile_speed == 0)
+		{
+			return target;
+		}
+		float horizontalTime = distance / projectile_speed;
+		float verticalTime = distance / projectile_speed;
+
+		target.x += target_velocity.x * horizontalTime;
+		target.y += target_velocity.y * horizontalTime;
+		target.z += target_velocity.z * verticalTime + abs(-980 * projectile_gravity_scale) * 0.5f * (verticalTime * verticalTime);
+
+		return target;
+	}
+
 	bool isHit(Vector3 loc, double margin = 20) {
 		if (mainCamera.LocationUnderReticle.x >= loc.x - margin && mainCamera.LocationUnderReticle.x <= loc.x + margin && mainCamera.LocationUnderReticle.y >= loc.y - margin && mainCamera.LocationUnderReticle.y <= loc.y + margin)
 			return true;
@@ -93,19 +109,44 @@ namespace aim {
 				closestPlayer = target;
 			}
 
-			Vector2 moveDistance = { (closestPlayer.Head2D.x - settings::window::Width / 2) / settings::config::AimSmoothing, (closestPlayer.Head2D.y - settings::window::Height / 2) / settings::config::AimSmoothing };
-			
-			double maxMove = 20.0f;
+			Vector3 target2D = closestPlayer.Head2D;
+			if (settings::config::Prediction) {
+				if (point::ProjectileSpeed != 0) {
+					target2D = w2s(predictLocation(closestPlayer.Head3D, closestPlayer.Velocity, point::ProjectileSpeed, point::ProjectileGravity, (float)closestPlayer.Head3D.Distance(mainCamera.Location)));
+				}
+			}
 
-			moveDistance.x = std::clamp(moveDistance.x, -maxMove, maxMove);
-			moveDistance.y = std::clamp(moveDistance.y, -maxMove, maxMove);
+			float screen_center_x = settings::window::Width / 2;
+			float screen_center_y = settings::window::Height / 2;
+			float TargetX = 0;
+			float TargetY = 0;
+
+			if (target2D.x > screen_center_x)
+			{
+				TargetX = -(screen_center_x - target2D.x);
+			}
+			else if (target2D.x < screen_center_x)
+			{
+				TargetX = target2D.x - screen_center_x;
+			}
+
+			if (target2D.y > screen_center_y)
+			{
+				TargetY = -(screen_center_y - target2D.y);
+			}
+			else if (target2D.y < screen_center_y)
+			{
+				TargetY = target2D.y - screen_center_y;
+			}
+
+			ImVec2 Angles(TargetX / settings::config::AimSmoothing, TargetY / settings::config::AimSmoothing);
 
 			target = closestPlayer;
 			if (settings::kmbox::NetKmbox) {
-				kmNet_mouse_move_auto(moveDistance.x, moveDistance.y, 5);
+				kmNet_mouse_move_auto(Angles.x, Angles.y, 3);
 			}
 			else {
-				km_move(moveDistance.x, moveDistance.y);
+				km_move(Angles.x, Angles.y);
 			}
 		}
 		else {

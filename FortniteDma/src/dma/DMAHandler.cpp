@@ -314,8 +314,12 @@ DWORD DMAHandler::GetPID() const
 
 ULONG64 DMAHandler::GetBaseAddress()
 {
-	if (!processInfo.base)
+	if (!processInfo.base) {
+		VMMDLL_ConfigSet(DMA_HANDLE, VMMDLL_OPT_REFRESH_FREQ_MEM, 1);
+		VMMDLL_ConfigSet(DMA_HANDLE, VMMDLL_OPT_REFRESH_FREQ_TLB, 1);
+		VMMDLL_ConfigSet(DMA_HANDLE, VMMDLL_OPT_REFRESH_FREQ_MEDIUM, 1);
 		processInfo.base = VMMDLL_ProcessGetModuleBase(DMA_HANDLE, processInfo.pid, const_cast<LPWSTR>(processInfo.wname));
+	}
 
 	return processInfo.base;
 }

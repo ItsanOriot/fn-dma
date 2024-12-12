@@ -20,7 +20,7 @@ namespace offsets {
 	uintptr_t PawnPrivate = 0x320;
 	uintptr_t PlayerArray = 0x2c0;
 	uintptr_t Mesh = 0x328;
-	uintptr_t ComponetToWorld = 0x1E0;
+	uintptr_t ComponentToWorld = 0x1E0;
 	uintptr_t Seconds = 0x150; // UWorld + 0x150
 	uintptr_t LastRenderTime = 0x30C;
 	uintptr_t BoneArray = 0x5A8;
@@ -31,6 +31,9 @@ namespace offsets {
 	uintptr_t TeamId = 0x1261;
 	uintptr_t RootComponent = 0x1b0;
 	uintptr_t LocationUnderReticle = 0x2748;
+	uintptr_t WeaponData = 0x6A0;
+	uintptr_t WeaponProjectileSpeed = 0x1e3c;
+	uintptr_t WeaponProjectileGravity = 0x1fb4;
 
 	uintptr_t FNamePool = 0x12BA9140;
 	uintptr_t FNameKey = 0x18;
@@ -42,9 +45,6 @@ namespace offsets {
 	uintptr_t AActorCount = AActorArray + 8;
 	uintptr_t Kills = 0x1274; //AFortPlayerStateAthena.KillScore: 0x1274
 	uintptr_t CurrentWeapon = 0xDC8;
-	uintptr_t WeaponData = 0x6A0;
 	uintptr_t TextPtr = 0x38;
 	uintptr_t NameOffset = 0xAF0;
-	uintptr_t ProjectileSpeed = 0x1FB0;
-	uintptr_t ProjectileGravity = 0x1FB4;
 }

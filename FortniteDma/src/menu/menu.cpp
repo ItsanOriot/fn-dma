@@ -57,7 +57,8 @@ void menu::Menu() {
 		ImGui::Checkbox("Aimbot", &settings::config::Aimbot);
 		ImGui::SliderInt("Smooth", &settings::config::AimSmoothing, 1, 100);
 		ImGui::SliderInt("FOV", &settings::config::AimFov, 1, settings::window::Height/2);
-
+		ImGui::Checkbox("Prediction", &settings::config::Prediction);
+		ImGui::SliderFloat("Mult", &settings::config::PredictionMultiplier, 0.5f, 2.f);
 
 		if (ImGui::Button(selectingAim ? "Press key" : std::format("Aim Key: {:d}", settings::config::AimKey).c_str()))
 			if (!selectingTrigger)
@@ -72,10 +73,10 @@ void menu::Menu() {
 			}
 		}
 
+
 		ImGui::Separator();
 
-		ImGui::SetCursorPos(ImVec2(10, 180));
-		ImGui::Separator();
+
 		ImGui::Text("Trigger");
 		ImGui::Checkbox("TriggerBot", &settings::config::TriggerBot);
 		ImGui::SliderInt("Delay", &settings::config::TriggerDelay, 1, 100);
@@ -96,8 +97,7 @@ void menu::Menu() {
 
 		ImGui::Separator();
 
-		ImGui::SetCursorPos(ImVec2(10, 310));
-		ImGui::Separator();
+
 		ImGui::Text("Kmbox net");
 		// on that chatgpt xD
 		ImGui::InputText(

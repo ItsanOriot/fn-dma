@@ -56,6 +56,15 @@ bool on_initialize() {
 	if (connect_serial_kmbox()) {
 		settings::kmbox::SerialKmbox = true;
 	}
+
+	// configs
+	settings::loadConfig();
+
+	// try to connect to kmbox net
+	if (connect_net_kmbox()) {
+		settings::kmbox::NetKmbox = true;
+		kmNet_lcd_picture_bottom((unsigned char*)images::mini_supernatural_image);
+	}
 	
 	if (mem.Init(L"FortniteClient-Win64-Shipping.exe", settings::dma::MemoryMap) < 0) {
 		std::cout << hue::red << "[!] " << hue::white << "Failed to initialize" << std::endl;
@@ -93,6 +102,7 @@ bool on_initialize() {
 
 	std::cout << hue::green << "[+] " << hue::white << "Scatter handles Created" << std::endl;
 
+	// idk why sometimes it fails
 	point::Base = mem.GetBaseAddress();
 	if (!point::Base)
 	{
@@ -117,15 +127,6 @@ bool on_initialize() {
 	//	return false;
 	//}
 
-	// configs
-	settings::loadConfig();
-
-	// try to connect to kmbox net
-	if (connect_net_kmbox()) {
-		std::cout << hue::green << "[+] " << hue::white << "Kmbox net connected" << std::endl;
-		settings::kmbox::NetKmbox = true;
-	}
-
 	// memory features
 	{
 		// refresh memory LOW PRIORITY
@@ -135,6 +136,10 @@ bool on_initialize() {
 		// update uworld and basics LOW PRIORITY
 		feature GDataUpdate = { newInfo , 1, 2000 };
 		memoryList.push_back(GDataUpdate);
+
+		// update local weapon projectile staes MID PRIORITY
+		feature WeaponStatsUpdate = { weaponUpdate, 1, 500 };
+		memoryList.push_back(WeaponStatsUpdate);
 
 		// update player list MID PRIORITY
 		feature PlayerListUpdate = { updatePlayerList , 1, 1000 };
@@ -160,7 +165,7 @@ bool on_initialize() {
 		mainList.push_back(HealthCheck);
 
 		// aimbot
-		feature Aimbot = { aim::updateAimbot, 1, 10};
+		feature Aimbot = { aim::updateAimbot, 1, 3};
 		mainList.push_back(Aimbot);
 
 		// triggerbot

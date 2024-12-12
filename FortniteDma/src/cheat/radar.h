@@ -91,7 +91,7 @@ namespace radar {
 
 		// Draw outline box
 		ImU32 outlineColor = IM_COL32(75, 0, 95, 255);
-		drawList->AddRect(pos, ImVec2(pos.x + siz.x, pos.y + siz.y), outlineColor, NULL, NULL, 5.f);
+		drawList->AddRect(pos, ImVec2(pos.x + siz.x, pos.y + siz.y), outlineColor, 10.f, NULL, 20.f);
 
 		// Draw filled box
 		ImU32 fillColor = IM_COL32(25, 25, 25, 255);

@@ -12,7 +12,7 @@ namespace settings {
 		inline bool criticalPriority = true;
 		inline bool headless = false; // no console
 		inline bool windowless = false; // no window
-		inline bool graphicsOnly = true; // just the menu
+		inline bool graphicsOnly = false; // just the menu
 		inline std::string configFile = "configs.txt";
 	}
 
@@ -147,6 +147,8 @@ namespace settings {
 		inline int AimFov = 100;
 		inline int AimSmoothing = 10;
 		inline int AimKey = 2;
+		inline bool Prediction = true;
+		inline float PredictionMultiplier = 1.f;
 
 		// trigger
 		inline bool TriggerBot = true;
@@ -173,6 +175,8 @@ namespace settings {
 				{"AimFov", AimFov},
 				{"AimSmoothing", AimSmoothing},
 				{"AimKey", AimKey},
+				{"Prediction", Prediction},
+				{"PredictionMultiplier", PredictionMultiplier},
 				{"TriggerBot", TriggerBot},
 				{"TriggerDelay", TriggerDelay},
 				{"TriggerKey", TriggerKey},
@@ -193,6 +197,8 @@ namespace settings {
 			if (j.contains("AimFov")) AimFov = j["AimFov"];
 			if (j.contains("AimSmoothing")) AimSmoothing = j["AimSmoothing"];
 			if (j.contains("AimKey")) AimKey = j["AimKey"];
+			if (j.contains("Prediction")) Prediction = j["Prediction"];
+			if (j.contains("PredictionMultiplier")) PredictionMultiplier = j["PredictionMultiplier"];
 			if (j.contains("TriggerBot")) TriggerBot = j["TriggerBot"];
 			if (j.contains("TriggerDelay")) TriggerDelay = j["TriggerDelay"];
 			if (j.contains("TriggerKey")) TriggerKey = j["TriggerKey"];

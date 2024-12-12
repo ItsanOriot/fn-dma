@@ -27,10 +27,9 @@ inline bool connect_net_kmbox() {
 		std::cout << hue::yellow << "[/] " << hue::white << "Failed to connect to kmbox net" << std::endl;
 		return false;
 	}
-	else
-	{
-		return true;
-	}
+
+	std::cout << hue::green << "[+] " << hue::white << "Kmbox net connected" << std::endl;
+	return true;
 }
 
 inline void km_move(int X, int Y) {

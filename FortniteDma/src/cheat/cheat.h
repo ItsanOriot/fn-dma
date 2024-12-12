@@ -314,7 +314,7 @@ void updatePlayerList()
 				continue;
 			mem.SPrepare(mem.hS3, playersToAdd[i].Mesh + offsets::BoneArray, 0x18); // includes both
 			//mem.SPrepare(mem.hS3, playersToAdd[i].Mesh + offsets::BoneArray + 0x10, sizeof(uintptr_t));
-			mem.SPrepare(mem.hS3, playersToAdd[i].Mesh + offsets::ComponetToWorld, sizeof(FTransform));
+			mem.SPrepare(mem.hS3, playersToAdd[i].Mesh + offsets::ComponentToWorld, sizeof(FTransform));
 			mem.SPrepare(mem.hS3, playersToAdd[i].Mesh + offsets::LastRenderTime, sizeof(float));
 			mem.SPrepare(mem.hS3, playersToAdd[i].RootComponent + offsets::Velocity, sizeof(Vector3));
 		}
@@ -327,7 +327,7 @@ void updatePlayerList()
 			playersToAdd[i].BoneArray2 = mem.SReads<uintptr_t>(mem.hS3, playersToAdd[i].Mesh + offsets::BoneArray + 0x10);
 			it->second.BoneArray = it->second.BoneArray1;
 			if (!it->second.BoneArray) it->second.BoneArray = it->second.BoneArray2;
-			playersToAdd[i].component_to_world = mem.SReads<FTransform>(mem.hS3, playersToAdd[i].Mesh + offsets::ComponetToWorld);
+			playersToAdd[i].component_to_world = mem.SReads<FTransform>(mem.hS3, playersToAdd[i].Mesh + offsets::ComponentToWorld);
 			playersToAdd[i].last_render = mem.SReads<float>(mem.hS3, playersToAdd[i].Mesh + offsets::LastRenderTime);
 			playersToAdd[i].Velocity = mem.SReads<Vector3>(mem.hS3, playersToAdd[i].RootComponent + offsets::Velocity);
 		}
@@ -449,7 +449,7 @@ void updatePlayers()
 			}
 			if (it.second.Mesh) {
 				mem.SPrepare(mem.hS4, it.second.Mesh + offsets::BoneArray, 0x18);
-				mem.SPrepare(mem.hS4, it.second.Mesh + offsets::ComponetToWorld, sizeof(FTransform));
+				mem.SPrepare(mem.hS4, it.second.Mesh + offsets::ComponentToWorld, sizeof(FTransform));
 				mem.SPrepare(mem.hS4, it.second.Mesh + offsets::LastRenderTime, sizeof(float));
 			}
 			if (it.second.RootComponent) {
@@ -492,7 +492,7 @@ void updatePlayers()
 
 			if (it.second.Pawn) {
 				it.second.Mesh = mem.SReadsSuccess<uintptr_t>(mem.hS4, it.second.Pawn + offsets::Mesh, it.second.Mesh);
-				it.second.RootComponent = mem.SReadsSuccess<uintptr_t>(mem.hS3, it.second.Pawn + offsets::RootComponent, it.second.RootComponent);
+				it.second.RootComponent = mem.SReadsSuccess<uintptr_t>(mem.hS4, it.second.Pawn + offsets::RootComponent, it.second.RootComponent);
 				it.second.isDying = mem.SReadsSuccess<BYTE>(mem.hS4, it.second.Pawn + offsets::isDying, it.second.isDying) & 0x20;
 				it.second.isDBNO = (mem.SReadsSuccess<BYTE>(mem.hS4, it.second.Pawn + offsets::IsDBNO, it.second.isDBNO) >> 6) & 1;
 			}
@@ -502,7 +502,7 @@ void updatePlayers()
 				it.second.BoneArray2 = mem.SReadsSuccess<uintptr_t>(mem.hS4, it.second.Mesh + offsets::BoneArray + 0x10, it.second.BoneArray2);
 				it.second.BoneArray = it.second.BoneArray1;
 				if (!it.second.BoneArray) it.second.BoneArray = it.second.BoneArray2;
-				it.second.component_to_world = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.Mesh + offsets::ComponetToWorld, it.second.component_to_world);
+				it.second.component_to_world = mem.SReadsSuccess<FTransform>(mem.hS4, it.second.Mesh + offsets::ComponentToWorld, it.second.component_to_world);
 				it.second.last_render = mem.SReadsSuccess<float>(mem.hS4, it.second.Mesh + offsets::LastRenderTime, it.second.last_render);
 			}
 
@@ -553,6 +553,7 @@ void updatePlayers()
 				it.second.RightFoot2D = w2s(it.second.RightFoot3D);
 			}
 
+			it.second.UsedByAim = false;
 
 		});
 
@@ -565,6 +566,36 @@ END:
 	__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
 	stats::updatePlayersData.addValue(static_cast<float>(elapsed));
 }
+
+void weaponUpdate()
+{
+	mem.SClear(mem.hS5);
+
+	if (point::Player)
+		mem.SPrepare(mem.hS5, point::Player + offsets::CurrentWeapon, sizeof(uintptr_t));
+
+	if (point::CurrentWeapon){
+		mem.SPrepare(mem.hS5, point::CurrentWeapon + offsets::WeaponProjectileSpeed, sizeof(float));
+		mem.SPrepare(mem.hS5, point::CurrentWeapon + offsets::WeaponProjectileGravity, sizeof(float));
+	}
+
+	mem.ExecuteMemoryReads(mem.hS5);
+
+	float projectileSpeed = 0;
+
+	if (point::Player)
+		point::CurrentWeapon = mem.SReads<uintptr_t>(mem.hS5, point::Player + offsets::CurrentWeapon);
+
+	if (point::Player && point::CurrentWeapon){
+		point::ProjectileSpeed = mem.SReads<float>(mem.hS5, point::CurrentWeapon + offsets::WeaponProjectileSpeed) / settings::config::PredictionMultiplier;
+		point::ProjectileGravity = mem.SReads<float>(mem.hS5, point::CurrentWeapon + offsets::WeaponProjectileGravity);
+	}
+	else {
+		point::ProjectileSpeed = 0;
+		point::ProjectileGravity = 0;
+	}
+}
+
 
 void healthChecks() {
 	
