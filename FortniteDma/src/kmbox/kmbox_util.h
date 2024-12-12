@@ -20,9 +20,8 @@ inline bool connect_serial_kmbox() {
 	return false;
 }
 
-inline bool connect_net_kmbox(std::string ip, std::string port, std::string uuid) {
-
-	int result = kmNet_init((char*)ip.c_str(), (char*)port.c_str(), (char*)uuid.c_str());
+inline bool connect_net_kmbox() {
+	int result = kmNet_init((char*)settings::kmbox::net::ip.c_str(), (char*)settings::kmbox::net::port.c_str(), (char*)settings::kmbox::net::uuid.c_str());
 
 	if (result == err_creat_socket ||result == err_net_rx_timeout || result == err_net_version) {
 		std::cout << hue::yellow << "[/] " << hue::white << "Failed to connect to kmbox net" << std::endl;

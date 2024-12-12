@@ -19,7 +19,7 @@ namespace aim {
 			return;
 
 		// not in game / alive
-		if (!point::Player)
+		if (!point::Player || !point::PlayerState)
 			return;
 
 		static PlayerCache target{};
@@ -28,7 +28,7 @@ namespace aim {
 		bool ValidTarget = true;
 
 		if (mem.IsKeyDown(settings::config::AimKey)) {
-			std::unordered_map<uintptr_t, PlayerCache> PlayerList = mainPlayerList;
+			std::unordered_map<uintptr_t, PlayerCache> PlayerList = secondPlayerList;
 
 			if (target.PlayerState) {
 
@@ -136,7 +136,7 @@ namespace aim {
 			return;
 
 		if (mem.IsKeyDown(settings::config::TriggerKey)) {
-			std::unordered_map<uintptr_t, PlayerCache> PlayerList = mainPlayerList;
+			std::unordered_map<uintptr_t, PlayerCache> PlayerList = secondPlayerList;
 
 			for (auto it : PlayerList) {
 				PlayerCache player = it.second;

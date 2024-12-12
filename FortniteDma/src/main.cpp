@@ -118,7 +118,13 @@ bool on_initialize() {
 	//}
 
 	// configs
-	settings::kmbox::net::loadConfig();
+	settings::loadConfig();
+
+	// try to connect to kmbox net
+	if (connect_net_kmbox()) {
+		std::cout << hue::green << "[+] " << hue::white << "Kmbox net connected" << std::endl;
+		settings::kmbox::NetKmbox = true;
+	}
 
 	// memory features
 	{

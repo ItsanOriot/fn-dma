@@ -12,7 +12,7 @@ namespace settings {
 		inline bool criticalPriority = true;
 		inline bool headless = false; // no console
 		inline bool windowless = false; // no window
-		inline bool graphicsOnly = false; // just the menu
+		inline bool graphicsOnly = true; // just the menu
 		inline std::string configFile = "configs.txt";
 	}
 
@@ -45,35 +45,6 @@ namespace settings {
 			if (j.contains("MemoryMap")) MemoryMap = j["MemoryMap"];
 		}
 
-#pragma region config
-		inline bool saveConfig() {
-			std::ofstream file(settings::runtime::configFile);
-			if (file.is_open()) {
-				file << toJson().dump(4);
-				file.close();
-			}
-			else {
-				std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
-				return false;
-			}
-		}
-
-		inline bool loadConfig() {
-			std::ifstream file(settings::runtime::configFile);
-			if (file.is_open()) {
-				json j;
-				file >> j;
-				fromJson(j);
-				file.close();
-				return true;
-			}
-			else {
-				std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
-				return false;
-			}
-		}
-#pragma endregion
-
 	}
 
 	// menus
@@ -101,36 +72,6 @@ namespace settings {
 			if (j.contains("Statistics")) Statistics = j["Statistics"];
 			if (j.contains("Internals")) Internals = j["Internals"];
 		}
-
-#pragma region config
-		inline bool saveConfig() {
-			std::ofstream file(settings::runtime::configFile);
-			if (file.is_open()) {
-				file << toJson().dump(4);
-				file.close();
-			}
-			else {
-				std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
-				return false;
-			}
-		}
-
-		inline bool loadConfig() {
-			std::ifstream file(settings::runtime::configFile);
-			if (file.is_open()) {
-				json j;
-				file >> j;
-				fromJson(j);
-				file.close();
-				return true;
-			}
-			else {
-				std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
-				return false;
-			}
-		}
-#pragma endregion
-
 	}
 
 	// kmbox
@@ -156,35 +97,44 @@ namespace settings {
 				if (j.contains("KmboxNetUuid")) uuid = j["KmboxNetUuid"];
 			}
 
-#pragma region config
 			inline bool saveConfig() {
-				std::ofstream file(settings::runtime::configFile);
+				std::ifstream file(settings::runtime::configFile);
 				if (file.is_open()) {
-					file << toJson().dump(4);
+					json combinedConfig;
+					file >> combinedConfig;
 					file.close();
+					std::ofstream fileOut(settings::runtime::configFile);
+					if (fileOut.is_open()) {
+						combinedConfig["KmboxNet"] = kmbox::net::toJson();
+						fileOut << combinedConfig.dump(4);
+						fileOut.close();
+					}
 				}
 				else {
 					std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
 					return false;
 				}
+
+				return true;
 			}
 
 			inline bool loadConfig() {
 				std::ifstream file(settings::runtime::configFile);
 				if (file.is_open()) {
-					json j;
-					file >> j;
-					fromJson(j);
+					json combinedConfig;
+					file >> combinedConfig;
 					file.close();
-					return true;
+					if (combinedConfig.contains("KmboxNet")) {
+						kmbox::net::fromJson(combinedConfig["KmboxNet"]);
+					}
 				}
 				else {
 					std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
 					return false;
 				}
-			}
-#pragma endregion
 
+				return true;
+			}
 		}
 	}
 
@@ -208,6 +158,7 @@ namespace settings {
 		inline bool Box = true;
 
 		// radar
+		inline bool Radar = true;
 		inline int RadarX = 30;
 		inline int RadarY = 30;
 		inline int RadarXSize = 300;
@@ -229,6 +180,7 @@ namespace settings {
 				{"Box", Box},
 				{"RadarX", RadarX},
 				{"RadarY", RadarY},
+				{"Radar", Radar},
 				{"RadarXSize", RadarXSize},
 				{"RadarYSize", RadarYSize},
 				{"radarScale", RadarScale},
@@ -247,6 +199,7 @@ namespace settings {
 			if (j.contains("AimFov")) AimFov = j["AimFov"];
 			if (j.contains("Skeleton")) Skeleton = j["Skeleton"];
 			if (j.contains("Box")) Box = j["Box"];
+			if (j.contains("Radar")) Radar = j["Radar"];
 			if (j.contains("RadarX")) RadarX = j["RadarX"];
 			if (j.contains("RadarY")) RadarY = j["RadarY"];
 			if (j.contains("RadarXSize")) RadarXSize = j["RadarXSize"];
@@ -255,64 +208,56 @@ namespace settings {
 			if (j.contains("RadarZoom")) RadarZoom = j["RadarZoom"];
 		}
 
-#pragma region config
-		inline bool saveConfig() {
-			std::ofstream file(settings::runtime::configFile);
-			if (file.is_open()) {
-				file << toJson().dump(4);
-				file.close();
-			}
-			else {
-				std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
-				return false;
-			}
-		}
-
-		inline bool loadConfig() {
-			std::ifstream file(settings::runtime::configFile);
-			if (file.is_open()) {
-				json j;
-				file >> j;
-				fromJson(j);
-				file.close();
-				return true;
-			}
-			else {
-				std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
-				return false;
-			}
-		}
-#pragma endregion
-
 	}
 	
-#pragma region config
 	inline bool saveConfig() {
-		bool result = true;
-		if (!dma::saveConfig())
-			result = false;
-		if (!menu::saveConfig())
-			result = false;
-		if (!kmbox::net::saveConfig())
-			result = false;
-		if (!config::saveConfig())
-			result = false;
-		return result;
+		json combinedConfig;
+
+		combinedConfig["Dma"] = dma::toJson();
+		combinedConfig["Menu"] = menu::toJson();
+		combinedConfig["KmboxNet"] = kmbox::net::toJson();
+		combinedConfig["Config"] = config::toJson();
+
+		std::ofstream file(settings::runtime::configFile);
+		if (file.is_open()) {
+			file << combinedConfig.dump(4);
+			file.close();
+		}
+		else {
+			std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
+			return false;
+		}
+
+		return true;
 	}
 
 	inline bool loadConfig() {
-		 bool result = true;
-		 if (!dma::loadConfig())
-			 result = false;
-		 if (!menu::loadConfig())
-			 result = false;
-		 if (!kmbox::net::loadConfig())
-			 result = false;
-		 if (!config::loadConfig())
-			 result = false;
-		 return result;
+		std::ifstream file(settings::runtime::configFile);
+		if (file.is_open()) {
+			json combinedConfig;
+			file >> combinedConfig;
+			file.close();
+
+			if (combinedConfig.contains("Dma")) {
+				dma::fromJson(combinedConfig["Dma"]);
+			}
+			if (combinedConfig.contains("Menu")) {
+				menu::fromJson(combinedConfig["Menu"]);
+			}
+			if (combinedConfig.contains("KmboxNet")) {
+				kmbox::net::fromJson(combinedConfig["KmboxNet"]);
+			}
+			if (combinedConfig.contains("Config")) {
+				config::fromJson(combinedConfig["Config"]);
+			}
+		}
+		else {
+			std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
+			return false;
+		}
+
+		return true;
 	}
-#pragma endregion
 
 }
 

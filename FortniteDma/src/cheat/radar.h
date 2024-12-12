@@ -45,98 +45,61 @@ namespace radar {
 		return Vector3(x_1, y_1, 0);
 	}
 
-	void DrawHUD(int xAxis, int yAxis, int width, int height)
-	{
-
-
-		ImDrawList* drawList = ImGui::GetBackgroundDrawList();
-
-		ImVec2 pos(xAxis, yAxis);
-		ImVec2 siz(width, height);
-		ImVec2 RadarCenter(pos.x + siz.x / 2, pos.y + siz.y / 2);
-
-		// Draw outline box
-		ImU32 outlineColor = IM_COL32(75, 0, 95, 255); // Adjust color as needed
-		drawList->AddRect(pos, ImVec2(pos.x + siz.x, pos.y + siz.y), outlineColor, NULL, NULL, 5.f);
-
-		// Draw filled box
-		ImU32 fillColor = IM_COL32(25, 25, 25, 255); // Adjust color as needed
-		drawList->AddRectFilled(pos, ImVec2(pos.x + siz.x, pos.y + siz.y), fillColor);
-
-		// Draw lines
-		ImU32 lineColor = IM_COL32(100, 100, 100, 255); // Adjust color as needed
-		drawList->AddLine(RadarCenter, pos, lineColor);
-		drawList->AddLine(RadarCenter, ImVec2(pos.x + siz.x, pos.y), lineColor);
-		drawList->AddLine(ImVec2(pos.x, RadarCenter.y), ImVec2(pos.x + siz.x, RadarCenter.y), lineColor);
-		drawList->AddLine(RadarCenter, ImVec2(RadarCenter.x, pos.y + siz.y), lineColor);
-
-		// Draw circle
-		float circleRadius = 2.0f;
-		drawList->AddCircle(RadarCenter, circleRadius, lineColor, 12, 1.0f);
-
-		//// Set the size and position of the window
-		////ImVec2 pos(xAxis, yAxis);
-		//ImVec2 siz(width, height);
-		//ImVec2 RadarCenter(siz.x / 2,siz.y / 2);
-
-		////ImGui::SetNextWindowSize(siz)
-		//ImGui::SetNextWindowSize(siz);
-
-		//// Begin an ImGui window
-		//ImGui::Begin("Radar Window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
-
-		//// Access the window draw list
-		//ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-		//// Draw outline box
-		//ImU32 outlineColor = IM_COL32(75, 0, 95, 255); // Adjust color as needed
-		//drawList->AddRect(ImVec2(0,0), ImVec2(siz.x, siz.y), outlineColor, NULL, NULL, 5.f);
-
-		//// Draw filled box
-		////ImU32 fillColor = IM_COL32(25, 25, 25, 255); // Adjust color as needed
-		////drawList->AddRectFilled(pos, ImVec2(siz.x, siz.y), fillColor);
-
-		//// Draw lines
-		//ImU32 lineColor = IM_COL32(100, 100, 100, 255); // Adjust color as needed
-		//drawList->AddLine(RadarCenter, ImVec2(0, 0), lineColor);
-		//drawList->AddLine(RadarCenter, ImVec2( siz.x, 0), lineColor);
-		//drawList->AddLine(ImVec2(0, RadarCenter.y), ImVec2( siz.x, RadarCenter.y), lineColor);
-		//drawList->AddLine(RadarCenter, ImVec2(RadarCenter.x, siz.y), lineColor);
-
-		//// Draw circle
-		//float circleRadius = 2.0f;
-		//drawList->AddCircle(RadarCenter, circleRadius, lineColor, 12, 1.0f);
-
-		//// End the window
-		//ImGui::End();
-
-	}
-
-	void DrawPoint(Vector3 position, int distance, Vector3 localPosition, int scale, float zoom, double localYaw, int xAxis, int yAxis, int width, int height, ImColor color)
+	void DrawPoint(ImDrawList* drawlist, Vector3 position, int distance, Vector3 localPosition, int scale, float zoom, double localYaw, ImVec2 pos, ImVec2 siz, ImColor color)
 	{
 		bool out = false;
-		Vector3 siz;
-		siz.x = width;
-		siz.y = height;
-		Vector3 pos;
-		pos.x = xAxis;
-		pos.y = yAxis;
 		bool ck = false;
 		Vector3 single = RotatePoint(position, localPosition, pos.x, pos.y, siz.x, siz.y, localYaw, zoom, &ck);
 		if (distance >= 0.f && distance < scale)
 		{
-			ImGui::GetBackgroundDrawList()->AddCircleFilled(ImVec2(single.x, single.y), 5, color);
-			//ImGui::GetBackgroundDrawList()->AddText(ImVec2(single.x, single.y), color, std::to_string((int)distance).c_str());
+			drawlist->AddCircleFilled(ImVec2(single.x, single.y), 5, color);
 
 		}
 	}
 
 	void Render()
 	{
-		std::unordered_map<uintptr_t, PlayerCache> PlayerList = mainPlayerList;
 
-		// draw the radar
-		DrawHUD(settings::config::RadarX, settings::config::RadarY, settings::config::RadarXSize, settings::config::RadarYSize);
+		if (!settings::config::Radar)
+			return;
+
+		std::unordered_map<uintptr_t, PlayerCache> PlayerList = secondPlayerList;
+
+		ImGui::Begin("Radar", nullptr, ImGuiWindowFlags_NoTitleBar);
+
+		ImVec2 RealSiz = ImGui::GetWindowSize();
+
+		// minimum size
+		if (RealSiz.x < 50) {
+			ImGui::SetWindowSize(ImVec2(50, RealSiz.y));
+		}
+		if (RealSiz.y < 50) {
+			ImGui::SetWindowSize(ImVec2(RealSiz.x, 50));
+		}
+
+		ImVec2 siz = ImVec2(RealSiz.x - 10, RealSiz.y - 10);
+
+		ImVec2 pos = ImGui::GetWindowPos();
+
+		pos.x += 5;
+		pos.y += 5;
+
+		ImVec2 RadarCenter(pos.x + siz.x / 2, pos.y + siz.y / 2);
+
+		// Access the window draw list
+		ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+		// Draw outline box
+		ImU32 outlineColor = IM_COL32(75, 0, 95, 255);
+		drawList->AddRect(pos, ImVec2(pos.x + siz.x, pos.y + siz.y), outlineColor, NULL, NULL, 5.f);
+
+		// Draw filled box
+		ImU32 fillColor = IM_COL32(25, 25, 25, 255);
+		drawList->AddRectFilled(pos, ImVec2(pos.x + siz.x, pos.y + siz.y), fillColor);
+
+		ImU32 lineColor = IM_COL32(255, 255, 255, 255);
+		drawList->AddLine(RadarCenter, pos, lineColor);
+		drawList->AddLine(RadarCenter, ImVec2(pos.x + siz.x, pos.y), lineColor);
 
 		// draw the points in the radar
 		for (auto it : PlayerList) {
@@ -152,6 +115,9 @@ namespace radar {
 			if (point::Player && player.TeamId == local_player::localTeam) {
 				continue;
 			}
+
+			if (player.isDying)
+				continue;
 
 			// should be in the updates
 			bool IsVis = point::Seconds - player.last_render <= 0.06f;
@@ -172,8 +138,10 @@ namespace radar {
 			if (player.isBot)
 				color = ImColor(0, 0, 255, 255);
 
-			DrawPoint(player.Head3D, mainCamera.Location.Distance(player.Head3D), mainCamera.Location, settings::config::RadarScale, settings::config::RadarZoom, mainCamera.Rotation.y, settings::config::RadarX, settings::config::RadarY, settings::config::RadarXSize, settings::config::RadarYSize, color);
+			DrawPoint(drawList, player.Head3D, mainCamera.Location.Distance(player.Head3D), mainCamera.Location, settings::config::RadarScale, settings::config::RadarZoom, mainCamera.Rotation.y, pos, siz, color);
 
 		}
+
+		ImGui::End();
 	}
 }

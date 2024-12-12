@@ -13,7 +13,7 @@ inline Camera mainCamera;
 
 inline std::unordered_map<uintptr_t, PlayerCache> mainPlayerList; // global player cache
 
-//inline std::unordered_map<uintptr_t, PlayerCache> readyCache; // this cache is a copy of newCache that is always complete and not being worked on directly
+inline std::unordered_map<uintptr_t, PlayerCache> secondPlayerList;
 
 namespace point {
     inline uintptr_t va_text = 0;

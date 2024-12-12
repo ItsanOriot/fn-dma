@@ -39,7 +39,7 @@ void menu::Menu() {
 	ImVec2 size = ImVec2(940, 500);
 	ImGui::SetNextWindowSize(size);
 	ImGui::PushFont((ImFont*)fonts::typenatural_font);
-	if (ImGui::Begin(std::format("SuperNatural v{:d}.{:d} key->Insert", settings::runtime::version_major, settings::runtime::version_minor).c_str(), NULL, ImGuiWindowFlags_NoResize)) {
+	if (ImGui::Begin(std::format("SuperNatural v{:d}.{:d}\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tkey Insert", settings::runtime::version_major, settings::runtime::version_minor).c_str(), NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
 
 		if (images::supernatural) {
 			ImGui::SetCursorPos({ 0, 0 });
@@ -55,7 +55,7 @@ void menu::Menu() {
 		ImGui::Separator();
 		ImGui::Text("Aim");
 		ImGui::Checkbox("Aimbot", &settings::config::Aimbot);
-		ImGui::SliderInt("Smoothness", &settings::config::AimSmoothing, 1, 100);
+		ImGui::SliderInt("Smooth", &settings::config::AimSmoothing, 1, 100);
 		ImGui::SliderInt("FOV", &settings::config::AimFov, 1, settings::window::Height/2);
 
 
@@ -122,10 +122,10 @@ void menu::Menu() {
 			&settings::kmbox::net::uuid
 		);
 		if (ImGui::Button("Connect")) {
-			if (connect_net_kmbox(settings::kmbox::net::ip, settings::kmbox::net::port, settings::kmbox::net::uuid)) {
-				std::cout << hue::green << "[+] " << hue::white << "Kmbox net connected" << std::endl;
+			if (connect_net_kmbox()) {
 				settings::kmbox::NetKmbox = true;
 				settings::kmbox::net::saveConfig();
+				kmNet_lcd_picture_bottom((unsigned char *)images::mini_supernatural_image);
 			}
 		}
 		ImGui::Separator();
@@ -145,11 +145,11 @@ void menu::Menu() {
 		ImGui::SetCursorPos(ImVec2(10, 310));
 		ImGui::Separator();
 		ImGui::Text("Radar");
-		ImGui::SliderInt("X", &settings::config::RadarX, 0, settings::window::Width - settings::config::RadarXSize);
-		ImGui::SliderInt("Y", &settings::config::RadarY, 0, settings::window::Height - settings::config::RadarYSize);
-		ImGui::SliderInt("Size", &settings::config::RadarYSize, 0, settings::window::Height);
+		ImGui::Checkbox("Radar", &settings::config::Radar);
 		settings::config::RadarXSize = settings::config::RadarYSize;
-		ImGui::SliderFloat("Zoom", &settings::config::RadarZoom, 1, 10);
+		ImGui::SliderFloat("Zoom", &settings::config::RadarZoom, 0.5f, 10.f);
+		ImGui::Text("");
+		ImGui::Text("");
 		ImGui::Separator();
 
 		ImGui::EndChild();
@@ -297,7 +297,7 @@ void menu::StatisticsWindow() {
 void menu::PlayerListWindow() {
 	ImVec2 size = ImVec2(510, 750);
 
-	std::unordered_map<uintptr_t, PlayerCache> PlayerList = mainPlayerList;
+	std::unordered_map<uintptr_t, PlayerCache> PlayerList = secondPlayerList;
 	static uintptr_t selectedPlayer = 0;
 
 	// player list

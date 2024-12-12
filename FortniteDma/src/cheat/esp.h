@@ -14,7 +14,7 @@ namespace esp {
 		int teammatesSkipped = 0;
 		int bots = 0;
 
-		for (auto it : mainPlayerList) {
+		for (auto it : secondPlayerList) {
 			PlayerCache player = it.second;
 
 			playersLooped++;
