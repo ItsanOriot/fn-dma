@@ -110,7 +110,7 @@ bool InitWindow(HINSTANCE instance, INT cmd_show)
 		back_buffer->Release();
 	}
 	else {
-		std::cout << hue::red << "[!] " << hue::white << "Error creating render target view" << std::endl;
+		std::cout << hue::red << "(!) " << hue::white << "Error creating render target view" << std::endl;
 		return false;
 	}
 
@@ -233,13 +233,13 @@ bool InitWindow(HINSTANCE instance, INT cmd_show)
 			pTexture->Release();
 		}
 		else {
-			std::cout << hue::yellow << "[/] " << hue::white << "Couldnt load an image" << std::endl;
+			std::cout << hue::yellow << "(/) " << hue::white << "Couldnt load an image" << std::endl;
 		}
 		
 		stbi_image_free(decodedData);
 	}
 	else {
-		std::cout << hue::yellow << "[/] " << hue::white << "Couldnt load an image" << std::endl;
+		std::cout << hue::yellow << "(/) " << hue::white << "Couldnt load an image" << std::endl;
 	}
 
 	return true;

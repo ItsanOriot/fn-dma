@@ -55,6 +55,10 @@ namespace esp {
 				continue;
 			}
 
+			// info we might want to show
+
+			int distanceMeters = mainCamera.Location.Distance(player.Head3D) / 100;
+
 			// ok maybe we can draw now
 
 			playersRendered++;
@@ -89,17 +93,36 @@ namespace esp {
 			// box
 			if (settings::config::Box)
 			{
-				ImColor colSK = ImColor(255, 0, 0, 255);
+				ImColor colTxt = ImColor(255, 255, 255, 255);
+				ImColor colBox = ImColor(255, 0, 0, 255);
 				if (IsVis)
-					colSK = ImColor(0, 255, 0, 255);
+					colBox = ImColor(0, 255, 0, 255);
 
-				float tk = 1.f;
-				float rd = 0.f;
+				float tk = 2.f;
+				float rd = 10.f;
 
 				float box_height = (abs(player.Top2D.y - player.Bottom2D.y));
 				float box_width = 0.5f * box_height;
-				ImGui::GetBackgroundDrawList()->AddRect(ImVec2(player.Bottom2D.x - box_width / 2, player.Bottom2D.y), ImVec2(player.Bottom2D.x + box_width / 2, player.Top2D.y), colSK, rd, 0, tk);
 
+				ImVec2 topLeft = ImVec2(player.Bottom2D.x - box_width / 2, player.Top2D.y);
+				ImVec2 bottomRight = ImVec2(player.Bottom2D.x + box_width / 2, player.Bottom2D.y);
+
+				//const char* nameStr = player.Name;
+				//ImVec2 nameSize = ImGui::CalcTextSize(nameStr);
+				//ImVec2 namePos = ImVec2(
+				//	topLeft.x + (width / 2.0f) - (nameSize.x / 2.0f),
+				//	topLeft.y - nameSize.y - 5.0f
+				//);
+				
+				string distanceStr = std::format("({:d}m)", distanceMeters);
+				ImVec2 distanceSize = ImGui::CalcTextSize(distanceStr.c_str());
+				ImVec2 distancePos = ImVec2(
+					topLeft.x + (box_width / 2.0f) - (distanceSize.x / 2.0f),
+					bottomRight.y + 5.0f
+				);
+
+				ImGui::GetBackgroundDrawList()->AddRect(topLeft, bottomRight, colBox, rd, NULL, tk);
+				ImGui::GetBackgroundDrawList()->AddText(distancePos, colTxt, distanceStr.c_str());
 			}
 			
 		}

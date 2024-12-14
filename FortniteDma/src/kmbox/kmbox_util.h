@@ -6,16 +6,16 @@ inline bool connect_serial_kmbox() {
 	if (!port.empty()) {
 
 		if (open_port(hSerial, port.c_str(), CBR_115200)) {
-			std::cout << hue::green << "[+] " << hue::white << "Serial kmbox found" << std::endl;
+			std::cout << hue::green << "(+) " << hue::white << "Serial kmbox found" << std::endl;
 			return true;
 		}
 		else
 		{
-			std::cout << hue::yellow << "[/] " << hue::white << "Couldnt connect to serial kmbox" << std::endl;
+			std::cout << hue::yellow << "(/) " << hue::white << "Couldnt connect to serial kmbox" << std::endl;
 		}
 	}
 	else {
-		std::cout << hue::yellow << "[/] " << hue::white << "No serial kmbox found" << std::endl;
+		std::cout << hue::yellow << "(/) " << hue::white << "No serial kmbox found" << std::endl;
 	}
 	return false;
 }
@@ -24,11 +24,11 @@ inline bool connect_net_kmbox() {
 	int result = kmNet_init((char*)settings::kmbox::net::ip.c_str(), (char*)settings::kmbox::net::port.c_str(), (char*)settings::kmbox::net::uuid.c_str());
 
 	if (result == err_creat_socket ||result == err_net_rx_timeout || result == err_net_version) {
-		std::cout << hue::yellow << "[/] " << hue::white << "Failed to connect to kmbox net" << std::endl;
+		std::cout << hue::yellow << "(/) " << hue::white << "Failed to connect to kmbox net" << std::endl;
 		return false;
 	}
 
-	std::cout << hue::green << "[+] " << hue::white << "Kmbox net connected" << std::endl;
+	std::cout << hue::green << "(+) " << hue::white << "Kmbox net connected" << std::endl;
 	return true;
 }
 

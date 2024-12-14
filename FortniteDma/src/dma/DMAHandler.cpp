@@ -38,11 +38,11 @@ int DMAHandler::FixDTB()
 		return 1; //Doesn't need to be patched lol
 
 	if (!VMMDLL_InitializePlugins(this->DMA_HANDLE)) {
-		std::cout << hue::yellow << "[/] " << hue::white << "Failed to initialize vmmdll plugins\r" << std::flush;
+		std::cout << hue::yellow << "(/) " << hue::white << "Failed to initialize VMMDLL plugins\r" << std::flush;
 		return -1;
 	}
 
-	std::cout << hue::green << "[+] " << hue::white << "Initializing plugins..\r" << std::flush;
+	std::cout << hue::green << "(+) " << hue::white << "Initializing plugins..\r" << std::flush;
 
 	//have to sleep a little or we try reading the file before the plugin initializes fully
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -57,7 +57,7 @@ int DMAHandler::FixDTB()
 		if (nt == VMMDLL_STATUS_SUCCESS) {
 			std::string content(reinterpret_cast<char*>(bytes));
 			clearLine();
-			std::cout << hue::green << "[+] " << hue::white << "Initializing vmmdll plugins.. (" << content << "%)\r" << std::flush;
+			std::cout << hue::green << "(+) " << hue::white << "Initializing VMMDLL plugins.. (" << content << "%)\r" << std::flush;
 		}
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -84,7 +84,7 @@ int DMAHandler::FixDTB()
 	}
 
 	clearLine();
-	std::cout << hue::green << "[+] " << hue::white << "Recovering possible dtb's..\r" << std::flush;
+	std::cout << hue::green << "(+) " << hue::white << "Recovering possible dtb's..\r" << std::flush;
 
 	std::vector<uint64_t> possibleDTBs;
 	char* pLineStart = reinterpret_cast<char*>(bytes);
@@ -109,7 +109,7 @@ int DMAHandler::FixDTB()
 	}
 
 	clearLine();
-	std::cout << hue::green << "[+] " << hue::white << "Trying possible dtb's..\r" << std::flush;
+	std::cout << hue::green << "(+) " << hue::white << "Trying possible dtb's..\r" << std::flush;
 
 	//loop over possible dtbs and set the config to use it til we find the correct one
 	for (size_t i = 0; i < possibleDTBs.size(); i++) {
@@ -120,7 +120,7 @@ int DMAHandler::FixDTB()
 		if (result) {
 			delete[] bytes;
 			clearLine();
-			std::cout << hue::green << "[+] " << hue::white << "Correct dtb found\r" << std::flush;
+			std::cout << hue::green << "(+) " << hue::white << "Correct dtb found\r" << std::flush;
 			processInfo.dtb = dtb;
 			return 0;
 		}
@@ -192,19 +192,19 @@ int DMAHandler::Init(const wchar_t* wname, bool memMap)
 
 		if (!modules.VMM)
 		{
-			std::cout << hue::red << "[!] " << hue::white << "Could not load vmm.dll" << std::endl;
+			std::cout << hue::red << "(!) " << hue::white << "Could not load vmm.dll" << std::endl;
 			return -1;
 		}
 
 		if (!modules.VMM)
 		{
-			std::cout << hue::red << "[!] " << hue::white << "Could not load FTD3XX.dll" << std::endl;
+			std::cout << hue::red << "(!) " << hue::white << "Could not load FTD3XX.dll" << std::endl;
 			return -1;
 		}
 
 		if (!modules.VMM)
 		{
-			std::cout << hue::red << "[!] " << hue::white << "Could not load leechcore.dll" << std::endl;
+			std::cout << hue::red << "(!) " << hue::white << "Could not load leechcore.dll" << std::endl;
 			return -1;
 		}
 
@@ -216,7 +216,7 @@ int DMAHandler::Init(const wchar_t* wname, bool memMap)
 		{
 			if (!DumpMemoryMap())
 			{
-				std::cout << hue::yellow << "[/] " << hue::white << "Failed to dump memory" << std::endl;
+				std::cout << hue::yellow << "(/) " << hue::white << "Failed to dump memory" << std::endl;
 				return 1;
 			}
 			else
@@ -235,7 +235,7 @@ int DMAHandler::Init(const wchar_t* wname, bool memMap)
 		DMA_HANDLE = VMMDLL_Initialize(argc, args);
 		if (!DMA_HANDLE)
 		{
-			std::cout << hue::red << "[!] " << hue::white << "Failed to connect to fpga device" << std::endl;
+			std::cout << hue::red << "(!) " << hue::white << "Failed to connect to fpga device" << std::endl;
 			return -1;
 		}
 
@@ -254,7 +254,7 @@ int DMAHandler::Init(const wchar_t* wname, bool memMap)
 	processInfo.wname = wname;
 	if (!VMMDLL_PidGetFromName(DMA_HANDLE, const_cast<char*>(processInfo.name.c_str()), &processInfo.pid))
 	{
-		std::cout << hue::red << "[!] " << hue::white << "Failed to find game" << std::endl;
+		std::cout << hue::red << "(!) " << hue::white << "Failed to find game" << std::endl;
 		return -1;
 	}
 	else
@@ -315,9 +315,7 @@ DWORD DMAHandler::GetPID() const
 ULONG64 DMAHandler::GetBaseAddress()
 {
 	if (!processInfo.base) {
-		VMMDLL_ConfigSet(DMA_HANDLE, VMMDLL_OPT_REFRESH_FREQ_MEM, 1);
-		VMMDLL_ConfigSet(DMA_HANDLE, VMMDLL_OPT_REFRESH_FREQ_TLB, 1);
-		VMMDLL_ConfigSet(DMA_HANDLE, VMMDLL_OPT_REFRESH_FREQ_MEDIUM, 1);
+		VMMDLL_ConfigSet(DMA_HANDLE, VMMDLL_OPT_REFRESH_ALL, 1);
 		processInfo.base = VMMDLL_ProcessGetModuleBase(DMA_HANDLE, processInfo.pid, const_cast<LPWSTR>(processInfo.wname));
 	}
 

@@ -67,64 +67,64 @@ bool on_initialize() {
 	}
 	
 	if (mem.Init(L"FortniteClient-Win64-Shipping.exe", settings::dma::MemoryMap) < 0) {
-		std::cout << hue::red << "[!] " << hue::white << "Failed to initialize" << std::endl;
+		std::cout << hue::red << "(!) " << hue::white << "Failed to initialize" << std::endl;
 		return false;
 	}
 
-	std::cout << hue::green << "[+] " << hue::white << "Initialized VMMDLL" << std::endl;
+	std::cout << hue::green << "(+) " << hue::white << "Initialized VMMDLL" << std::endl;
 
 	int fixResult = mem.FixDTB();
 
 	std::cout << "\n";
 
-	if (fixResult == -1) {
-		std::cout << hue::red << "[!] " << hue::white << "Failed to find correct dtb" << std::endl;
+	if (fixResult == -1) { // fix needed but failed
+		std::cout << hue::red << "(!) " << hue::white << "Failed to find correct dtb" << std::endl;
 		return false;
 	}
 
-	if (fixResult == 0) {
+	if (fixResult == 0) { // fix needed and successfull
 		if (!mem.cachePML4()) {
-			std::cout << hue::red << "[!] " << hue::white << "Failed to cache tables" << std::endl;
+			std::cout << hue::red << "(!) " << hue::white << "Failed to cache tables" << std::endl;
 			return false;
 		}
 
-		std::cout << hue::green << "[+] " << hue::white << "Cached tables" << std::endl;
+		std::cout << hue::green << "(+) " << hue::white << "Cached tables" << std::endl;
 	}
 
-	if (fixResult == 1)
-		std::cout << hue::green << "[+] " << hue::white << "Dtb fix and tables caching was not needed" << std::endl;
+	if (fixResult == 1) // fix not needed
+		std::cout << hue::green << "(+) " << hue::white << "Dtb fix and tables caching was not needed" << std::endl;
 
 	if (!mem.SCreate()) {
-		std::cout << hue::red << "[!] " << hue::white << "Failed to initialize all handles" << std::endl;
+		std::cout << hue::red << "(!) " << hue::white << "Failed to initialize all handles" << std::endl;
 		return false;
 	}
 
-	std::cout << hue::green << "[+] " << hue::white << "Scatter handles Created" << std::endl;
+	std::cout << hue::green << "(+) " << hue::white << "Scatter handles Created" << std::endl;
 
 	// idk why sometimes it fails
 	point::Base = mem.GetBaseAddress();
 	if (!point::Base)
 	{
-		std::cout << hue::red << "[!] " << hue::white << "Failed to get base address" << std::endl;
+		std::cout << hue::red << "(!) " << hue::white << "Failed to refresh process" << std::endl; // couldnt get base
 		return false;
 	}
 
-	std::cout << hue::green << "[+] " << hue::white << "Successfully refreshed process" << std::endl;
+	std::cout << hue::green << "(+) " << hue::white << "Successfully refreshed process" << std::endl;
 	
 	if (!mem.InitKeyboard()) 
 	{
-		std::cout << hue::yellow << "[/] " << hue::white << "Failed to initialize keyboard hotkeys" << std::endl;
+		std::cout << hue::yellow << "(/) " << hue::white << "Failed to initialize keyboard hotkeys" << std::endl;
 	}
 	else {
 		settings::runtime::hotKeys = true;
 	}
 
-	std::cout << hue::green << "[+] " << hue::white << "Initialized keyboard hotkeys" << std::endl;
+	std::cout << hue::green << "(+) " << hue::white << "Initialized keyboard hotkeys" << std::endl;
 
 	// no longer any offset (for now)
 	point::va_text = point::Base;
 	//if (!update_va_text()) {
-	//	std::cout << hue::red << "[!] " << hue::white << "Failed to get text_va" << std::endl;
+	//	std::cout << hue::red << "(!) " << hue::white << "Failed to get text_va" << std::endl;
 	//	return false;
 	//}
 
@@ -206,7 +206,7 @@ void memoryloop() {
 	if (settings::runtime::criticalPriority) {
 		// set thread priority
 		if (!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
-			std::cout << hue::yellow << "[/] " << hue::white << "Failed to set critical priority to memory thread" << std::endl;
+			std::cout << hue::yellow << "(/) " << hue::white << "Failed to set critical priority to memory thread" << std::endl;
 	}
 
 	// never quit?
@@ -263,12 +263,12 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 	if (settings::runtime::criticalPriority) {
 		// set thread priority
 		if (!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
-			std::cout << hue::yellow << "[/] " << hue::white << "Failed to set critical priority to main thread" << std::endl;
+			std::cout << hue::yellow << "(/) " << hue::white << "Failed to set critical priority to main thread" << std::endl;
 	}
 	
 	if (!settings::runtime::graphicsOnly) {
 		if (!on_initialize()) {
-			std::cout << hue::yellow << "[/] " << hue::white << "Press enter to exit" << std::endl;
+			std::cout << hue::yellow << "(/) " << hue::white << "Press enter to exit" << std::endl;
 			std::cin.get();
 			return 1;
 		}

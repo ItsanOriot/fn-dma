@@ -115,7 +115,7 @@ namespace settings {
 					}
 				}
 				else {
-					std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
+					std::cout << hue::yellow << "(/) " << hue::white << "Failed to open configuration file" << std::endl;
 					return false;
 				}
 
@@ -133,7 +133,7 @@ namespace settings {
 					}
 				}
 				else {
-					std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
+					std::cout << hue::yellow << "(/) " << hue::white << "Failed to open configuration file" << std::endl;
 					return false;
 				}
 
@@ -234,7 +234,7 @@ namespace settings {
 			file.close();
 		}
 		else {
-			std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
+			std::cout << hue::yellow << "(/) " << hue::white << "Failed to open configuration file" << std::endl;
 			return false;
 		}
 
@@ -262,7 +262,7 @@ namespace settings {
 			}
 		}
 		else {
-			std::cout << hue::yellow << "[/] " << hue::white << "Failed to open configuration file" << std::endl;
+			std::cout << hue::yellow << "(/) " << hue::white << "Failed to open configuration file" << std::endl;
 			return false;
 		}
 

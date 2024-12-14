@@ -27,6 +27,29 @@ namespace aim {
 			return false;
 	}
 
+	bool isHit2D(Vector3 loc, double margin = 20) {
+		if (settings::window::Width / 2 >= loc.x - margin && settings::window::Width / 2 <= loc.x + margin && settings::window::Height / 2 >= loc.y - margin && settings::window::Height / 2 <= loc.y + margin)
+			return true;
+		else
+			return false;
+	}
+
+	float computeMax(Vector3 loc, double marginStart, double marginEnd, float maxStart, float maxEnd) {
+		// Calculate distance from the target to the reticle
+		float distanceX = std::abs(settings::window::Width / 2 - loc.x);
+		float distanceY = std::abs(settings::window::Width / 2 - loc.y);
+		float distance = std::sqrt(distanceX * distanceX + distanceY * distanceY);
+
+		// Clamp the distance to the defined margin range
+		float clampedDistance = std::clamp(distance, static_cast<float>(marginStart), static_cast<float>(marginEnd));
+
+		// Normalize the clamped distance (0 at marginStart, 1 at marginEnd)
+		float normalized = (clampedDistance - marginStart) / (marginEnd - marginStart);
+
+		// Linearly interpolate `max` between maxStart and maxEnd based on normalized value
+		return maxStart + normalized * (maxEnd - maxStart);
+	}
+
 	double isClose(Vector3 loc2D) {
 
 		const double maxDistance = std::sqrt(std::pow(settings::window::Width, 2) + std::pow(settings::window::Height, 2)) / 2.0;
@@ -123,65 +146,56 @@ namespace aim {
 				closestPlayer = target;
 			}
 
+			target = closestPlayer;
+
+			Vector3 target3D = closestPlayer.Head3D;
 			Vector3 target2D = closestPlayer.Head2D;
+
 			if (settings::config::Prediction) {
 				if (point::ProjectileSpeed != 0) {
-					target2D = w2s(predictLocation(closestPlayer.Head3D, closestPlayer.Velocity, point::ProjectileSpeed, point::ProjectileGravity, (float)closestPlayer.Head3D.Distance(mainCamera.Location)));
+					target3D = predictLocation(target3D, closestPlayer.Velocity, point::ProjectileSpeed, point::ProjectileGravity, (float)mainCamera.Location.Distance(target3D));
+					target2D = w2s(target3D);
 				}
 			}
 
 			const float screenCenterX = settings::window::Width / 2;
 			const float screenCenterY = settings::window::Height / 2;
 
-			int AngleX = 0;
-			int AngleY = 0;
+			float AngleX = 0;
+			float AngleY = 0;
 
 			// ugly
 			if (target2D.x > screenCenterX)
-				AngleX = static_cast<int>( ( - ((screenCenterX - target2D.x) )) / settings::config::AimSmoothing);
+				AngleX = ( ( - ((screenCenterX - target2D.x) )));
 			else if (target2D.x < screenCenterX)
-				AngleX = static_cast<int>( (target2D.x - screenCenterX) / settings::config::AimSmoothing);
+				AngleX = ( (target2D.x - screenCenterX));
 
 			if (target2D.y > screenCenterY)
-				AngleY = static_cast<int>( ( - ((screenCenterY - target2D.y)) / settings::config::AimSmoothing));
+				AngleY = ( ( - ((screenCenterY - target2D.y))));
 			else if (target2D.y < screenCenterY)
-				AngleY = static_cast<int>( (target2D.y - screenCenterY) / settings::config::AimSmoothing);
+				AngleY = ( (target2D.y - screenCenterY));
+
+			AngleX = AngleX / settings::config::AimSmoothing;
+			AngleY = AngleY / settings::config::AimSmoothing;
 
 			const double MaxDistance = std::sqrt(std::pow(settings::window::Width, 2) + std::pow(settings::window::Height, 2)) / 2.0;
-			double closeness = isClose(target2D);
 
-			if (closeness < 0.02) {
-				int max = MaxDistance * 0.02;
-				AngleX = std::clamp(AngleX, -max, max);
-				AngleY = std::clamp(AngleY, -max, max);
-			}
-			else if (closeness < 0.05) {
-				int max = MaxDistance * 0.05;
-				AngleX = std::clamp(AngleX, -max, max);
-				AngleY = std::clamp(AngleY, -max, max);
-			}
-			else if (closeness < 0.1) {
-				int max = MaxDistance * 0.1;
-				AngleX = std::clamp(AngleX, -max, max);
-				AngleY = std::clamp(AngleY, -max, max);
-			}
-			else if (closeness < 0.15) {
-				int max = MaxDistance * 0.15;
+			float max = 20.0f; // Default value
+			if (isHit2D(target2D, 100)) {
+				max = computeMax(target2D, 30, 100, 1.0f, 20.0f); // Smoothly interpolate max between 30 and 60 margins
 				AngleX = std::clamp(AngleX, -max, max);
 				AngleY = std::clamp(AngleY, -max, max);
 			}
 			else {
-				int max = MaxDistance * 0.2;
 				AngleX = std::clamp(AngleX, -max, max);
 				AngleY = std::clamp(AngleY, -max, max);
 			}
 
-			target = closestPlayer;
 			if (settings::kmbox::NetKmbox) {
-				kmNet_mouse_move(AngleX, AngleY);
+				kmNet_mouse_move(static_cast<short>(AngleX), static_cast<short>(AngleY));
 			}
 			else {
-				km_move(AngleX, AngleY);
+				km_move(static_cast<short>(AngleX), static_cast<short>(AngleY));
 			}
 		}
 		else {
