@@ -440,6 +440,7 @@ void updatePlayers()
 			}
 			if (it.second.PlayerState) {
 				mem.SPrepare(mem.hS4, it.second.PlayerState + offsets::PawnPrivate, sizeof(uintptr_t));
+				mem.SPrepare(mem.hS4, it.second.PlayerState + offsets::TeamId, sizeof(uint32_t));
 			}
 			if (it.second.Pawn) {
 				mem.SPrepare(mem.hS4, it.second.Pawn + offsets::Mesh, sizeof(uintptr_t));
@@ -488,6 +489,7 @@ void updatePlayers()
 
 			if (it.second.PlayerState) {
 				it.second.Pawn = mem.SReadsSuccess<uintptr_t>(mem.hS4, it.second.PlayerState + offsets::PawnPrivate, it.second.Pawn);
+				it.second.TeamId = mem.SReadsSuccess<uint32_t>(mem.hS4, it.second.PlayerState + offsets::TeamId, it.second.TeamId);
 			}
 
 			if (it.second.Pawn) {

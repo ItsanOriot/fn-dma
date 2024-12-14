@@ -14,6 +14,9 @@ namespace settings {
 		inline bool windowless = false; // no window
 		inline bool graphicsOnly = false; // just the menu
 		inline std::string configFile = "configs.txt";
+
+		// internal
+		inline bool hotKeys = false;
 	}
 
 	// window settings
@@ -76,6 +79,7 @@ namespace settings {
 
 	// kmbox
 	namespace kmbox {
+
 		inline bool SerialKmbox = false;
 		inline bool NetKmbox = false;
 

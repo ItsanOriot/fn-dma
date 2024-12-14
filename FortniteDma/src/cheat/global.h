@@ -39,6 +39,8 @@ namespace point {
     inline uintptr_t LocationPointer = 0;
     inline uintptr_t RotationPointer = 0;
     inline uintptr_t CurrentWeapon = 0;
+
+    // values (not really points) should be elsewhere
     inline float ProjectileSpeed = 0;
     inline float ProjectileGravity = 0;
 

@@ -150,7 +150,7 @@ public:
 	 * \param memMap whether the memory map should get dumped to file.
 	 */
 	int Init(const wchar_t* wname, bool memMap = true);
-	bool FixDTB();
+	int FixDTB();
 	void RefreshLight();
 
 	// Whether the DMA and Process are initialized

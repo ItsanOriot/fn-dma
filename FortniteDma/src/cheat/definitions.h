@@ -94,6 +94,10 @@ public:
 	Vector3 operator/(double number) const {
 		return Vector3(x / number, y / number, z / number);
 	}
+
+	bool operator==(Vector3 v) const {
+		return x == v.x && y == v.y && z == v.z;
+	}
 };
 struct FQuat
 {

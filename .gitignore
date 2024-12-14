@@ -4,6 +4,7 @@
 *imgui.ini
 *mmap.txt
 *configs.txt
+temp/
 
 ### C++ ###
 # Prerequisites

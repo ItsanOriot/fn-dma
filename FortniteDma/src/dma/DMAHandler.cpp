@@ -29,17 +29,17 @@ void clearLine() {
 }
 
 //Directory Table Base requires: symsrv.dll, dbghelp.dll and info.db
-bool DMAHandler::FixDTB()
+int DMAHandler::FixDTB()
 {
 
 	PVMMDLL_MAP_MODULEENTRY moduleEntry;
 	bool result = VMMDLL_Map_GetModuleFromNameU(this->DMA_HANDLE, this->GetPID(), (LPSTR)this->GameName.c_str(), &moduleEntry, NULL);
 	if (result)
-		return true; //Doesn't need to be patched lol
+		return 1; //Doesn't need to be patched lol
 
 	if (!VMMDLL_InitializePlugins(this->DMA_HANDLE)) {
 		std::cout << hue::yellow << "[/] " << hue::white << "Failed to initialize vmmdll plugins\r" << std::flush;
-		return false;
+		return -1;
 	}
 
 	std::cout << hue::green << "[+] " << hue::white << "Initializing plugins..\r" << std::flush;
@@ -71,7 +71,7 @@ bool DMAHandler::FixDTB()
 
 	result = VMMDLL_VfsListU(this->DMA_HANDLE, (LPSTR)"\\misc\\procinfo\\", &VfsFileList);
 	if (!result)
-		return false;
+		return -1;
 
 	//read the data from the txt and parse it
 	const size_t buffer_size = cbSize;
@@ -80,7 +80,7 @@ bool DMAHandler::FixDTB()
 	auto nt = VMMDLL_VfsReadW(this->DMA_HANDLE, (LPWSTR)L"\\misc\\procinfo\\dtb.txt", bytes, buffer_size - 1, &j, 0);
 	if (nt != VMMDLL_STATUS_SUCCESS) {
 		delete[] bytes;
-		return false;
+		return -1;
 	}
 
 	clearLine();
@@ -122,12 +122,12 @@ bool DMAHandler::FixDTB()
 			clearLine();
 			std::cout << hue::green << "[+] " << hue::white << "Correct dtb found\r" << std::flush;
 			processInfo.dtb = dtb;
-			return true;
+			return 0;
 		}
 	}
 
 	delete[] bytes;
-	return false;
+	return -1;
 }
 
 ULONG64 DMAHandler::GetModuleAddress(std::wstring modulename)

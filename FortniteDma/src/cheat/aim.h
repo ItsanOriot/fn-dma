@@ -27,8 +27,23 @@ namespace aim {
 			return false;
 	}
 
+	double isClose(Vector3 loc2D) {
+
+		const double maxDistance = std::sqrt(std::pow(settings::window::Width, 2) + std::pow(settings::window::Height, 2)) / 2.0;
+		
+		double distance = std::sqrt(std::pow(loc2D.x - settings::window::Width / 2, 2) + std::pow(loc2D.y - settings::window::Height / 2, 2));
+		
+		double closeness = 1.0f - (distance / maxDistance);
+		
+		closeness = std::clamp(closeness, 0.0, 1.0);
+		
+		return closeness;
+	}
+
 	void updateAimbot()
 	{
+		if (!settings::runtime::hotKeys)
+			return;
 		if (!settings::kmbox::SerialKmbox && !settings::kmbox::NetKmbox) 
 			return;
 		if (!settings::config::Aimbot) 
@@ -49,13 +64,13 @@ namespace aim {
 			if (target.PlayerState) {
 
 				// check if player still exist
-				auto it = mainPlayerList.find(target.PlayerState);
-				if (it != mainPlayerList.end()) {
+				auto it = secondPlayerList.find(target.PlayerState);
+				if (it != secondPlayerList.end()) {
 					// get lil bro
 					target = it->second;
 
 					// check if he's good
-					double dist = abs(target.Head2D.x - settings::window::Width / 2) + abs(target.Head2D.y - settings::window::Height / 2);
+					double dist = std::sqrt(std::pow(target.Head2D.x - settings::window::Width / 2, 2) + std::pow(target.Head2D.y - settings::window::Height / 2, 2));
 
 					bool IsVis = point::Seconds - target.last_render <= 0.06f;
 
@@ -72,7 +87,6 @@ namespace aim {
 
 			if (Targetting && !ValidTarget)
 				return;
-				
 
 			double closest = HUGE;
 			PlayerCache closestPlayer{};
@@ -91,11 +105,11 @@ namespace aim {
 
 					if (player.TeamId == local_player::localTeam) continue;
 
-					double distance2D = abs(player.Head2D.x - settings::window::Width / 2) + abs(player.Head2D.y - settings::window::Height / 2);
+					double distance2D = std::sqrt(std::pow(player.Head2D.x - settings::window::Width / 2, 2) + std::pow(player.Head2D.y - settings::window::Height / 2, 2));
 
 					if (distance2D < settings::config::AimFov) {
 						if (distance2D < closest) {
-							closest = abs(player.Head2D.x - settings::window::Width / 2) + abs(player.Head2D.y - settings::window::Height / 2);
+							closest = distance2D;
 							closestPlayer = player;
 							closePlayerFound = true;
 						}
@@ -116,37 +130,58 @@ namespace aim {
 				}
 			}
 
-			float screen_center_x = settings::window::Width / 2;
-			float screen_center_y = settings::window::Height / 2;
-			float TargetX = 0;
-			float TargetY = 0;
+			const float screenCenterX = settings::window::Width / 2;
+			const float screenCenterY = settings::window::Height / 2;
 
-			if (target2D.x > screen_center_x)
-			{
-				TargetX = -(screen_center_x - target2D.x);
-			}
-			else if (target2D.x < screen_center_x)
-			{
-				TargetX = target2D.x - screen_center_x;
-			}
+			int AngleX = 0;
+			int AngleY = 0;
 
-			if (target2D.y > screen_center_y)
-			{
-				TargetY = -(screen_center_y - target2D.y);
-			}
-			else if (target2D.y < screen_center_y)
-			{
-				TargetY = target2D.y - screen_center_y;
-			}
+			// ugly
+			if (target2D.x > screenCenterX)
+				AngleX = static_cast<int>( ( - ((screenCenterX - target2D.x) )) / settings::config::AimSmoothing);
+			else if (target2D.x < screenCenterX)
+				AngleX = static_cast<int>( (target2D.x - screenCenterX) / settings::config::AimSmoothing);
 
-			ImVec2 Angles(TargetX / settings::config::AimSmoothing, TargetY / settings::config::AimSmoothing);
+			if (target2D.y > screenCenterY)
+				AngleY = static_cast<int>( ( - ((screenCenterY - target2D.y)) / settings::config::AimSmoothing));
+			else if (target2D.y < screenCenterY)
+				AngleY = static_cast<int>( (target2D.y - screenCenterY) / settings::config::AimSmoothing);
+
+			const double MaxDistance = std::sqrt(std::pow(settings::window::Width, 2) + std::pow(settings::window::Height, 2)) / 2.0;
+			double closeness = isClose(target2D);
+
+			if (closeness < 0.02) {
+				int max = MaxDistance * 0.02;
+				AngleX = std::clamp(AngleX, -max, max);
+				AngleY = std::clamp(AngleY, -max, max);
+			}
+			else if (closeness < 0.05) {
+				int max = MaxDistance * 0.05;
+				AngleX = std::clamp(AngleX, -max, max);
+				AngleY = std::clamp(AngleY, -max, max);
+			}
+			else if (closeness < 0.1) {
+				int max = MaxDistance * 0.1;
+				AngleX = std::clamp(AngleX, -max, max);
+				AngleY = std::clamp(AngleY, -max, max);
+			}
+			else if (closeness < 0.15) {
+				int max = MaxDistance * 0.15;
+				AngleX = std::clamp(AngleX, -max, max);
+				AngleY = std::clamp(AngleY, -max, max);
+			}
+			else {
+				int max = MaxDistance * 0.2;
+				AngleX = std::clamp(AngleX, -max, max);
+				AngleY = std::clamp(AngleY, -max, max);
+			}
 
 			target = closestPlayer;
 			if (settings::kmbox::NetKmbox) {
-				kmNet_mouse_move_auto(Angles.x, Angles.y, 3);
+				kmNet_mouse_move(AngleX, AngleY);
 			}
 			else {
-				km_move(Angles.x, Angles.y);
+				km_move(AngleX, AngleY);
 			}
 		}
 		else {
@@ -157,6 +192,8 @@ namespace aim {
 
 	void updateTriggerBot()
 	{
+		if (!settings::runtime::hotKeys)
+			return;
 
 		if (!settings::kmbox::SerialKmbox && !settings::kmbox::NetKmbox)
 			return;

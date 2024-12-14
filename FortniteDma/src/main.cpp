@@ -73,27 +73,26 @@ bool on_initialize() {
 
 	std::cout << hue::green << "[+] " << hue::white << "Initialized VMMDLL" << std::endl;
 
-
-	// retry 5 times but when it doesnt want to work it just doesnt
-	bool fixedDtb = false;
-	for (int i = 0; i < 5 && !fixedDtb; i++) {
-		if (mem.FixDTB())
-			fixedDtb = true;
-	}
+	int fixResult = mem.FixDTB();
 
 	std::cout << "\n";
 
-	if (!fixedDtb) {
+	if (fixResult == -1) {
 		std::cout << hue::red << "[!] " << hue::white << "Failed to find correct dtb" << std::endl;
 		return false;
 	}
 
-	if (!mem.cachePML4()) {
-		std::cout << hue::red << "[!] " << hue::white << "Failed to cache tables" << std::endl;
-		return false;
+	if (fixResult == 0) {
+		if (!mem.cachePML4()) {
+			std::cout << hue::red << "[!] " << hue::white << "Failed to cache tables" << std::endl;
+			return false;
+		}
+
+		std::cout << hue::green << "[+] " << hue::white << "Cached tables" << std::endl;
 	}
 
-	std::cout << hue::green << "[+] " << hue::white << "Cached tables" << std::endl;
+	if (fixResult == 1)
+		std::cout << hue::green << "[+] " << hue::white << "Dtb fix and tables caching was not needed" << std::endl;
 
 	if (!mem.SCreate()) {
 		std::cout << hue::red << "[!] " << hue::white << "Failed to initialize all handles" << std::endl;
@@ -114,8 +113,10 @@ bool on_initialize() {
 	
 	if (!mem.InitKeyboard()) 
 	{
-		std::cout << hue::red << "[!] " << hue::white << "Failed to initialize keyboard hotkeys" << std::endl;
-		return false;
+		std::cout << hue::yellow << "[/] " << hue::white << "Failed to initialize keyboard hotkeys" << std::endl;
+	}
+	else {
+		settings::runtime::hotKeys = true;
 	}
 
 	std::cout << hue::green << "[+] " << hue::white << "Initialized keyboard hotkeys" << std::endl;
@@ -165,7 +166,7 @@ bool on_initialize() {
 		mainList.push_back(HealthCheck);
 
 		// aimbot
-		feature Aimbot = { aim::updateAimbot, 1, 3};
+		feature Aimbot = { aim::updateAimbot, 1, 5 };
 		mainList.push_back(Aimbot);
 
 		// triggerbot
