@@ -2,7 +2,7 @@
 
 #include "definitions.h"
 
-FMATRIX MatrixMultiplication(FMATRIX pM1, FMATRIX pM2)
+inline FMATRIX MatrixMultiplication(FMATRIX pM1, FMATRIX pM2)
 {
 	FMATRIX pOut;
 	pOut._11 = pM1._11 * pM2._11 + pM1._12 * pM2._21 + pM1._13 * pM2._31 + pM1._14 * pM2._41;
@@ -25,7 +25,7 @@ FMATRIX MatrixMultiplication(FMATRIX pM1, FMATRIX pM2)
 	return pOut;
 }
 
-FMATRIX Matrix(Vector3 rot, Vector3 origin) {
+inline FMATRIX Matrix(Vector3 rot, Vector3 origin) {
 	float radPitch = (rot.x * float(M_PI) / 180.f);
 	float radYaw = (rot.y * float(M_PI) / 180.f);
 	float radRoll = (rot.z * float(M_PI) / 180.f);
@@ -61,14 +61,14 @@ FMATRIX Matrix(Vector3 rot, Vector3 origin) {
 	return matrix;
 }
 
-Vector3 CalcMatrix(FTransform bone, FTransform component_to_world)
+inline Vector3 CalcMatrix(FTransform bone, FTransform component_to_world)
 {
 	FMATRIX matrix = MatrixMultiplication(bone.ToMatrixWithScale(), component_to_world.ToMatrixWithScale());
 
 	return Vector3(matrix._41, matrix._42, matrix._43);
 }
 
-Vector3 w2s(Vector3 WorldLocation)
+inline Vector3 w2s(Vector3 WorldLocation)
 {
 	FMATRIX tempMatrix = Matrix(mainCamera.Rotation, Vector3(0, 0, 0));
 

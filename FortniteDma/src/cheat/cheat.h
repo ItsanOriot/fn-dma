@@ -47,6 +47,7 @@ void newInfo()
 
 		if (point::LocalPlayer) {
 			mem.SPrepare(mem.hS, point::LocalPlayer + offsets::PlayerController, sizeof(uintptr_t));
+			mem.SPrepare(mem.hS, point::LocalPlayer + 0x378, sizeof(uintptr_t));
 		}
 		
 		if (point::PlayerController) {
@@ -86,6 +87,11 @@ void newInfo()
 
 		if (point::LocalPlayer) {
 			point::PlayerController = mem.SReads<uintptr_t>(mem.hS, point::LocalPlayer + offsets::PlayerController);
+			point::Settings = mem.SReads<uintptr_t>(mem.hS, point::LocalPlayer + 0x378);
+			if (point::Settings) {
+				point::MouseSensX = mem.Read<float>(point::Settings + 0x664);
+				point::MouseSensY = mem.Read<float>(point::Settings + 0x668);
+			}
 		}
 
 		if (point::PlayerController) {
@@ -436,7 +442,7 @@ void updatePlayers()
 		// prepare all the reads in parallel
 		std::for_each(std::execution::par, mainPlayerList.begin(), mainPlayerList.end(), [&](auto& it) {
 			if (it.second.BoneArray) {
-				mem.SPrepare(mem.hS4, it.second.BoneArray, (82 * 0x60) + sizeof(FTransform));
+				mem.SPrepare(mem.hS4, it.second.BoneArray, (82 * 0x60) + sizeof(FTransform)); // 82
 			}
 			if (it.second.PlayerState) {
 				mem.SPrepare(mem.hS4, it.second.PlayerState + offsets::PawnPrivate, sizeof(uintptr_t));
@@ -458,10 +464,10 @@ void updatePlayers()
 			}
 		});
 
-
+		auto start1 = std::chrono::high_resolution_clock::now();
 		// EXECUTE AHAHAHAHHAHAH
 		mem.ExecuteMemoryReads(mem.hS4);
-
+		__int64 elapsed1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
 
 		// all reads in parallel
 		std::for_each(std::execution::par, mainPlayerList.begin(), mainPlayerList.end(), [&](auto& it) {
@@ -513,6 +519,7 @@ void updatePlayers()
 			}
 
 			// while we are at it do all the players w2s and calculate with matrix the bone positions
+			if (it.second.BoneArray)
 			{
 				// get bones world position
 				it.second.Head3D = CalcMatrix(it.second.HeadBone, it.second.component_to_world);
@@ -554,8 +561,6 @@ void updatePlayers()
 				it.second.LeftFoot2D = w2s(it.second.LeftFoot3D);
 				it.second.RightFoot2D = w2s(it.second.RightFoot3D);
 			}
-
-			it.second.UsedByAim = false;
 
 		});
 

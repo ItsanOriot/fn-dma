@@ -157,6 +157,12 @@ bool on_initialize() {
 		// update players location HIGH PRIORITY
 		feature PlayersUpdate = { updatePlayers , 1, 0 };
 		memoryList.push_back(PlayersUpdate);
+
+		// aimbot
+		feature Aimbot = { aim::updateAimbot, 1, 5 };
+		memoryList.push_back(Aimbot);
+
+
 	}
 
 	// main thread features
@@ -165,13 +171,16 @@ bool on_initialize() {
 		feature HealthCheck = { healthChecks, 1, 100 };
 		mainList.push_back(HealthCheck);
 
-		// aimbot
-		feature Aimbot = { aim::updateAimbot, 1, 5 };
-		mainList.push_back(Aimbot);
+		//// aimbot
+		//feature Aimbot = { aim::updateAimbot, 1, 10 };
+		//mainList.push_back(Aimbot);
 
 		// triggerbot
 		feature Triggerbot = { aim::updateTriggerBot, 1, 5 };
 		mainList.push_back(Triggerbot);
+
+		if (settings::runtime::windowless)
+			return true;
 
 		// drawing features must be run every loop
 

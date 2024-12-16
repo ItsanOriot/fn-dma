@@ -3,6 +3,7 @@
 namespace esp {
 	void renderPlayers()
 	{
+
 		// we make a copy of the cache we dont want modifications from elsewhere while using it
 		std::unordered_map<uintptr_t, PlayerCache> PlayerList = secondPlayerList;
 

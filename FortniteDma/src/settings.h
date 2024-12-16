@@ -8,7 +8,7 @@ namespace settings {
 	// general
 	namespace runtime {
 		inline int version_major = 1;
-		inline int version_minor = 0;
+		inline int version_minor = 1;
 		inline bool criticalPriority = true;
 		inline bool headless = false; // no console
 		inline bool windowless = false; // no window
@@ -154,6 +154,9 @@ namespace settings {
 		inline bool Prediction = true;
 		inline float PredictionMultiplier = 1.f;
 
+		inline float StepsPerDegreeX = 1.f;
+		inline float StepsPerDegreeY = 1.f;
+
 		// trigger
 		inline bool TriggerBot = true;
 		inline int TriggerDelay = 25; // ms
@@ -181,6 +184,8 @@ namespace settings {
 				{"AimKey", AimKey},
 				{"Prediction", Prediction},
 				{"PredictionMultiplier", PredictionMultiplier},
+				{"StepsPerDegreeX", StepsPerDegreeX},
+				{"StepsPerDegreeY", StepsPerDegreeY},
 				{"TriggerBot", TriggerBot},
 				{"TriggerDelay", TriggerDelay},
 				{"TriggerKey", TriggerKey},
@@ -203,6 +208,8 @@ namespace settings {
 			if (j.contains("AimKey")) AimKey = j["AimKey"];
 			if (j.contains("Prediction")) Prediction = j["Prediction"];
 			if (j.contains("PredictionMultiplier")) PredictionMultiplier = j["PredictionMultiplier"];
+			if (j.contains("StepsPerDegreeX")) StepsPerDegreeX = j["StepsPerDegreeX"];
+			if (j.contains("StepsPerDegreeY")) StepsPerDegreeY = j["StepsPerDegreeY"];
 			if (j.contains("TriggerBot")) TriggerBot = j["TriggerBot"];
 			if (j.contains("TriggerDelay")) TriggerDelay = j["TriggerDelay"];
 			if (j.contains("TriggerKey")) TriggerKey = j["TriggerKey"];
@@ -232,6 +239,7 @@ namespace settings {
 		if (file.is_open()) {
 			file << combinedConfig.dump(4);
 			file.close();
+			std::cout << hue::green << "(+) " << hue::white << "Saved configuration file" << std::endl;
 		}
 		else {
 			std::cout << hue::yellow << "(/) " << hue::white << "Failed to open configuration file" << std::endl;
@@ -260,6 +268,8 @@ namespace settings {
 			if (combinedConfig.contains("Config")) {
 				config::fromJson(combinedConfig["Config"]);
 			}
+
+			std::cout << hue::green << "(+) " << hue::white << "Loaded configuration file" << std::endl;
 		}
 		else {
 			std::cout << hue::yellow << "(/) " << hue::white << "Failed to open configuration file" << std::endl;

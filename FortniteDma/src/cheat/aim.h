@@ -34,22 +34,6 @@ namespace aim {
 			return false;
 	}
 
-	float computeMax(Vector3 loc, double marginStart, double marginEnd, float maxStart, float maxEnd) {
-		// Calculate distance from the target to the reticle
-		float distanceX = std::abs(settings::window::Width / 2 - loc.x);
-		float distanceY = std::abs(settings::window::Width / 2 - loc.y);
-		float distance = std::sqrt(distanceX * distanceX + distanceY * distanceY);
-
-		// Clamp the distance to the defined margin range
-		float clampedDistance = std::clamp(distance, static_cast<float>(marginStart), static_cast<float>(marginEnd));
-
-		// Normalize the clamped distance (0 at marginStart, 1 at marginEnd)
-		float normalized = (clampedDistance - marginStart) / (marginEnd - marginStart);
-
-		// Linearly interpolate `max` between maxStart and maxEnd based on normalized value
-		return maxStart + normalized * (maxEnd - maxStart);
-	}
-
 	double isClose(Vector3 loc2D) {
 
 		const double maxDistance = std::sqrt(std::pow(settings::window::Width, 2) + std::pow(settings::window::Height, 2)) / 2.0;
@@ -61,6 +45,25 @@ namespace aim {
 		closeness = std::clamp(closeness, 0.0, 1.0);
 		
 		return closeness;
+	}
+
+	constexpr float RadiansToDegrees(float radians) {
+		return radians * (180.0f / M_PI);
+	}
+
+	Rotation targetRotation(const Vector3& currentPosition, const Vector3& targetPosition) {
+		float directionX = targetPosition.x - currentPosition.x;
+		float directionY = targetPosition.y - currentPosition.y;
+		float directionZ = targetPosition.z - currentPosition.z;
+
+		float yawRadians = std::atan2(directionY, directionX);
+		float yawDegrees = RadiansToDegrees(yawRadians);
+
+		float distanceXY = std::sqrt(directionX * directionX + directionY * directionY); // Horizontal distance
+		float pitchRadians = std::atan2(directionZ, distanceXY);
+		float pitchDegrees = RadiansToDegrees(pitchRadians);
+
+		return { yawDegrees, pitchDegrees };
 	}
 
 	void updateAimbot()
@@ -148,8 +151,11 @@ namespace aim {
 
 			target = closestPlayer;
 
-			Vector3 target3D = closestPlayer.Head3D;
-			Vector3 target2D = closestPlayer.Head2D;
+			Vector3 originalTarget3D = closestPlayer.Head3D;
+			Vector3 originalTarget2D = closestPlayer.Head2D;
+
+			Vector3 target3D = originalTarget3D;
+			Vector3 target2D = originalTarget2D;
 
 			if (settings::config::Prediction) {
 				if (point::ProjectileSpeed != 0) {
@@ -158,44 +164,28 @@ namespace aim {
 				}
 			}
 
-			const float screenCenterX = settings::window::Width / 2;
-			const float screenCenterY = settings::window::Height / 2;
+			Rotation target = targetRotation(mainCamera.Location, target3D);
 
-			float AngleX = 0;
-			float AngleY = 0;
+			float targety = target.yaw - mainCamera.Rotation.y;
+			float targetx = target.pitch - mainCamera.Rotation.x;
 
-			// ugly
-			if (target2D.x > screenCenterX)
-				AngleX = ( ( - ((screenCenterX - target2D.x) )));
-			else if (target2D.x < screenCenterX)
-				AngleX = ( (target2D.x - screenCenterX));
+			//targety /= settings::config::AimSmoothing;
+			//targetx /= settings::config::AimSmoothing;
 
-			if (target2D.y > screenCenterY)
-				AngleY = ( ( - ((screenCenterY - target2D.y))));
-			else if (target2D.y < screenCenterY)
-				AngleY = ( (target2D.y - screenCenterY));
+			while (targety > 180.0f) targety -= 360.0f;
+			while (targety < -180.0f) targety += 360.0f;
 
-			AngleX = AngleX / settings::config::AimSmoothing;
-			AngleY = AngleY / settings::config::AimSmoothing;
+			while (targetx > 89.9f) targetx = 89.9f;
+			while (targetx < -89.9f) targetx = -89.9f;
 
-			const double MaxDistance = std::sqrt(std::pow(settings::window::Width, 2) + std::pow(settings::window::Height, 2)) / 2.0;
-
-			float max = 20.0f; // Default value
-			if (isHit2D(target2D, 100)) {
-				max = computeMax(target2D, 30, 100, 1.0f, 20.0f); // Smoothly interpolate max between 30 and 60 margins
-				AngleX = std::clamp(AngleX, -max, max);
-				AngleY = std::clamp(AngleY, -max, max);
-			}
-			else {
-				AngleX = std::clamp(AngleX, -max, max);
-				AngleY = std::clamp(AngleY, -max, max);
-			}
+			float AngleX = targety * (settings::config::StepsPerDegreeX / settings::config::AimSmoothing);
+			float AngleY = targetx * (settings::config::StepsPerDegreeY / settings::config::AimSmoothing);
 
 			if (settings::kmbox::NetKmbox) {
-				kmNet_mouse_move(static_cast<short>(AngleX), static_cast<short>(AngleY));
+				kmNet_mouse_move(AngleX, AngleY);
 			}
 			else {
-				km_move(static_cast<short>(AngleX), static_cast<short>(AngleY));
+				km_move(AngleX, AngleY);
 			}
 		}
 		else {
@@ -212,7 +202,7 @@ namespace aim {
 		if (!settings::kmbox::SerialKmbox && !settings::kmbox::NetKmbox)
 			return;
 
-		if (!settings::config::Aimbot)
+		if (!settings::config::TriggerBot)
 			return;
 
 		static bool clicked = false;

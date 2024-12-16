@@ -343,3 +343,8 @@ struct tarray
 	uintptr_t data;
 	uint32_t count;
 };
+
+struct Rotation {
+	float yaw;   // Rotation around Y-axis
+	float pitch; // Rotation around X-axis
+};

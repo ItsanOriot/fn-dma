@@ -25,6 +25,8 @@
 #include <imgui/imgui_impl_dx11.h>
 #include <imgui/imgui_impl_win32.h>
 
+#include "../cheat/utils.h"
+
 // what is this you ask? well, ask chatgpt - sfYass
 static int StringInputTextCallback(ImGuiInputTextCallbackData* data) {
 	if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
@@ -33,6 +35,25 @@ static int StringInputTextCallback(ImGuiInputTextCallbackData* data) {
 		data->Buf = &(*str)[0];
 	}
 	return 0;
+}
+
+constexpr float RadiansToDegrees(float radians) {
+	return radians * (180.0f / M_PI);
+}
+
+Rotation targetRotation(const Vector3& currentPosition, const Vector3& targetPosition) {
+	float directionX = targetPosition.x - currentPosition.x;
+	float directionY = targetPosition.y - currentPosition.y;
+	float directionZ = targetPosition.z - currentPosition.z;
+
+	float yawRadians = std::atan2(directionY, directionX);
+	float yawDegrees = RadiansToDegrees(yawRadians);
+
+	float distanceXY = std::sqrt(directionX * directionX + directionY * directionY); // Horizontal distance
+	float pitchRadians = std::atan2(directionZ, distanceXY);
+	float pitchDegrees = RadiansToDegrees(pitchRadians);
+
+	return { yawDegrees, pitchDegrees };
 }
 
 void menu::Menu() {
@@ -164,6 +185,71 @@ void menu::Menu() {
 		ImGui::Checkbox("Player List Viewer", &settings::menu::PlayerList);
 		ImGui::Checkbox("Internals", &settings::menu::Internals);
 		ImGui::Separator();
+
+		if (ImGui::Button("Calibrate Aim")) {
+			Vector3 point = w2s(Vector3());
+
+			Rotation target = targetRotation(mainCamera.Location, Vector3());
+			
+			float currenty = mainCamera.Rotation.y;
+			float currentx = mainCamera.Rotation.x;
+
+			float targety = target.yaw - mainCamera.Rotation.y;
+
+			while (targety > 180.0f) targety -= 360.0f;
+			while (targety < -180.0f) targety += 360.0f;
+
+			float targetx = target.pitch - mainCamera.Rotation.x;
+
+			while (targetx > 89.9f) targetx = 89.9f;
+			while (targetx < -89.9f) targetx = -89.9f;
+
+			const float screenCenterX = settings::window::Width / 2;
+			const float screenCenterY = settings::window::Height / 2;
+
+			float AngleX = 0;
+			float AngleY = 0;
+
+			// ugly
+			if (point.x > screenCenterX)
+				AngleX = ((-((screenCenterX - point.x))));
+			else if (point.x < screenCenterX)
+				AngleX = ((point.x - screenCenterX));
+
+			if (point.y > screenCenterY)
+				AngleY = ((-((screenCenterY - point.y))));
+			else if (point.y < screenCenterY)
+				AngleY = ((point.y - screenCenterY));
+
+			AngleX = AngleX;
+			AngleY = AngleY;
+
+			kmNet_mouse_move(AngleX, AngleY);
+
+			Sleep(500);
+
+			Vector3 point2 = w2s(Vector3());
+
+			float newy = mainCamera.Rotation.y - currenty;
+
+			while (newy > 180.0f) newy -= 360.0f;
+			while (newy < -180.0f) newy += 360.0f;
+
+			float newx = mainCamera.Rotation.x - currentx;
+
+			while (newx > 180.0f) newx -= 360.0f;
+			while (newx < -180.0f) newx += 360.0f;
+
+			settings::config::StepsPerDegreeX = (AngleX / newy) - 1; // - 1 cause its not that precise
+			settings::config::StepsPerDegreeY = (AngleY / newx) + 1; // + 1 cause its not that precise
+
+			std::cout << hue::green << "(+) " << hue::white << "X calculated step is " << settings::config::StepsPerDegreeX << std::endl;
+
+			std::cout << hue::green << "(+) " << hue::white << "Y calculated step is " << settings::config::StepsPerDegreeY << std::endl;
+
+			settings::saveConfig();
+
+		}
 
 		ImGui::SetCursorPos(ImVec2(630, 310));
 		ImGui::Separator(); // why does this one not show?
@@ -451,6 +537,10 @@ void menu::AdvancedDebugWindow() {
 		ImGui::Text(std::format("Location Under Reticle -> x: {:.2f} y: {:.2f} z: {:.2f}", mainCamera.LocationUnderReticle.x, mainCamera.LocationUnderReticle.y, mainCamera.LocationUnderReticle.z).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 20));
 		ImGui::Text(std::format("Seconds -> {:.2f}", point::Seconds).c_str());
+		ImGui::SetCursorPos(ImVec2(x, y += 20));
+		ImGui::Text(std::format("Mouse Sens X -> {:.2f}", point::MouseSensX).c_str());
+		ImGui::SetCursorPos(ImVec2(x, y += 20));
+		ImGui::Text(std::format("Mouse Sens Y -> {:.2f}", point::MouseSensY).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 40));
 		ImGui::Text(std::format("Local Team -> {:d}", local_player::localTeam).c_str());
 		//ImGui::SetCursorPos(ImVec2(x, y += 20));

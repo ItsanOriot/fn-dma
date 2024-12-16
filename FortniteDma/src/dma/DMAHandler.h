@@ -119,6 +119,12 @@ public:
 			return "";
 		}
 
+		if (type == e_registry_type::dword)
+		{
+			DWORD dwordValue = *reinterpret_cast<DWORD*>(buffer);
+			return std::to_string(dwordValue);
+		}
+
 		std::wstring wstr = std::wstring(reinterpret_cast<wchar_t*>(buffer));
 		return std::string(wstr.begin(), wstr.end());
 	}
@@ -364,37 +370,141 @@ public:
 	 */
 	static void CloseDMA();
 
+	DWORD GetPidFromName(std::string process_name)
+	{
+		DWORD pid = 0;
+		VMMDLL_PidGetFromName(DMA_HANDLE, (LPSTR)process_name.c_str(), &pid);
+		return pid;
+	}
+
+	template <typename T>
+	T Read(ULONG64 address, DWORD pid)
+	{
+		T buff{};
+		DWORD size;
+		VMMDLL_MemReadEx(DMA_HANDLE, pid, address, reinterpret_cast<PBYTE>(&buff), sizeof(T), &size, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
+		return buff;
+	}
+
 	bool InitKeyboard()
 	{
+		//std::string win = QueryValue("HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\CurrentBuild", e_registry_type::sz);
+		//int Winver = 0;
+		//if (!win.empty())
+		//	Winver = std::stoi(win);
+		//else
+		//	return false;
+
+		//VMMDLL_PidGetFromName(DMA_HANDLE, const_cast<char*>(std::string("winlogon.exe").c_str()), &this->win_logon_pid);
+
+		//if (Winver > 22000)
+		//{
+		//	auto pids = GetPidListFromName("csrss.exe");
+
+
+		//	for (size_t i = 0; i < pids.size(); i++)
+		//	{
+		//		auto pid = pids[i];
+		//		uintptr_t tmp = VMMDLL_ProcessGetModuleBaseU(DMA_HANDLE, pid, const_cast<LPSTR>("win32ksgd.sys"));
+		//		uintptr_t g_session_global_slots = tmp + 0x3110;
+		//		DWORD size;
+		//		uintptr_t addy1;
+		//		VMMDLL_MemReadEx(DMA_HANDLE, pid, g_session_global_slots, reinterpret_cast<PBYTE>(&addy1), 8, &size, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
+		//		uintptr_t addy2;
+		//		VMMDLL_MemReadEx(DMA_HANDLE, pid, addy1, reinterpret_cast<PBYTE>(&addy2), 8, &size, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
+		//		uintptr_t user_session_state;
+		//		VMMDLL_MemReadEx(DMA_HANDLE, pid, addy2, reinterpret_cast<PBYTE>(&user_session_state), 8, &size, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
+		//		gafAsyncKeyStateExport = user_session_state + 0x3690;
+		//		if (gafAsyncKeyStateExport > 0x7FFFFFFFFFFF)
+		//			break;
+		//	}
+		//	if (gafAsyncKeyStateExport > 0x7FFFFFFFFFFF)
+		//		return true;
+		//	return false;
+		//}
+		//else
+		//{
+		//	PVMMDLL_MAP_EAT eat_map = NULL;
+		//	PVMMDLL_MAP_EATENTRY eat_map_entry;
+		//	DWORD winlogpid;
+		//	VMMDLL_PidGetFromName(DMA_HANDLE, const_cast<char*>(std::string("winlogon.exe").c_str()), &winlogpid);
+		//	bool result = VMMDLL_Map_GetEATU(DMA_HANDLE, winlogpid | VMMDLL_PID_PROCESS_WITH_KERNELMEMORY, const_cast<LPSTR>("win32kbase.sys"), &eat_map);
+		//	if (!result)
+		//		return false;
+
+		//	if (eat_map->dwVersion != VMMDLL_MAP_EAT_VERSION)
+		//	{
+		//		VMMDLL_MemFree(eat_map);
+		//		eat_map_entry = NULL;
+		//		return false;
+		//	}
+
+		//	for (int i = 0; i < eat_map->cMap; i++)
+		//	{
+		//		eat_map_entry = eat_map->pMap + i;
+		//		if (strcmp(eat_map_entry->uszFunction, "gafAsyncKeyState") == 0)
+		//		{
+		//			gafAsyncKeyStateExport = eat_map_entry->vaFunction;
+
+		//			break;
+		//		}
+		//	}
+
+		//	VMMDLL_MemFree(eat_map);
+		//	eat_map = NULL;
+		//	if (gafAsyncKeyStateExport > 0x7FFFFFFFFFFF)
+		//		return true;
+		//	return false;
+		//}
+
 		std::string win = QueryValue("HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\CurrentBuild", e_registry_type::sz);
 		int Winver = 0;
 		if (!win.empty())
 			Winver = std::stoi(win);
 		else
 			return false;
-
-		VMMDLL_PidGetFromName(DMA_HANDLE, const_cast<char*>(std::string("winlogon.exe").c_str()), &this->win_logon_pid);
-
+		std::string ubr = QueryValue("HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\UBR", e_registry_type::dword);
+		int Ubr = 0;
+		if (!ubr.empty())
+			Ubr = std::stoi(ubr);
+		else
+			return false;
+		this->win_logon_pid = GetPidFromName("winlogon.exe");
 		if (Winver > 22000)
 		{
 			auto pids = GetPidListFromName("csrss.exe");
-
-
 			for (size_t i = 0; i < pids.size(); i++)
 			{
 				auto pid = pids[i];
 				uintptr_t tmp = VMMDLL_ProcessGetModuleBaseU(DMA_HANDLE, pid, const_cast<LPSTR>("win32ksgd.sys"));
-				uintptr_t g_session_global_slots = tmp + 0x3110;
-				DWORD size;
-				uintptr_t addy1;
-				VMMDLL_MemReadEx(DMA_HANDLE, pid, g_session_global_slots, reinterpret_cast<PBYTE>(&addy1), 8, &size, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
-				uintptr_t addy2;
-				VMMDLL_MemReadEx(DMA_HANDLE, pid, addy1, reinterpret_cast<PBYTE>(&addy2), 8, &size, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
-				uintptr_t user_session_state;
-				VMMDLL_MemReadEx(DMA_HANDLE, pid, addy2, reinterpret_cast<PBYTE>(&user_session_state), 8, &size, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
-				gafAsyncKeyStateExport = user_session_state + 0x3690;
-				if (gafAsyncKeyStateExport > 0x7FFFFFFFFFFF)
-					break;
+				uintptr_t g_session_global_slots;
+				if (!tmp) {
+					tmp = VMMDLL_ProcessGetModuleBaseU(DMA_HANDLE, pid, const_cast<LPSTR>("win32k.sys"));
+					g_session_global_slots = tmp + 0x82538;
+				}
+				else {
+					g_session_global_slots = tmp + 0x3110;
+				}
+
+				uintptr_t user_session_state = 0;
+				for (int i = 0; i < 4; i++)
+				{
+					user_session_state = Read<uintptr_t>(Read<uintptr_t>(Read<uintptr_t>(g_session_global_slots, pid) + 8 * i, pid), pid);
+					if (user_session_state > 0x7FFFFFFFFFFF)
+						break;
+				}
+
+				if (Winver >= 26100) {
+					gafAsyncKeyStateExport = user_session_state + (Ubr >= 2314 ? 0x3828 : 0x3820);
+				}
+				else if (Winver >= 22631 && Ubr >= 3810) {
+					gafAsyncKeyStateExport = user_session_state + 0x36A8;
+				}
+				else {
+					gafAsyncKeyStateExport = user_session_state + 0x3690;
+				}
+
+				if (gafAsyncKeyStateExport > 0x7FFFFFFFFFFF) break;
 			}
 			if (gafAsyncKeyStateExport > 0x7FFFFFFFFFFF)
 				return true;
@@ -404,9 +514,7 @@ public:
 		{
 			PVMMDLL_MAP_EAT eat_map = NULL;
 			PVMMDLL_MAP_EATENTRY eat_map_entry;
-			DWORD winlogpid;
-			VMMDLL_PidGetFromName(DMA_HANDLE, const_cast<char*>(std::string("winlogon.exe").c_str()), &winlogpid);
-			bool result = VMMDLL_Map_GetEATU(DMA_HANDLE, winlogpid | VMMDLL_PID_PROCESS_WITH_KERNELMEMORY, const_cast<LPSTR>("win32kbase.sys"), &eat_map);
+			bool result = VMMDLL_Map_GetEATU(DMA_HANDLE, GetPidFromName("winlogon.exe") | VMMDLL_PID_PROCESS_WITH_KERNELMEMORY, const_cast<LPSTR>("win32kbase.sys"), &eat_map);
 			if (!result)
 				return false;
 
@@ -430,6 +538,27 @@ public:
 
 			VMMDLL_MemFree(eat_map);
 			eat_map = NULL;
+			if (gafAsyncKeyStateExport < 0x7FFFFFFFFFFF)
+			{
+				PVMMDLL_MAP_MODULEENTRY module_info;
+				auto result = VMMDLL_Map_GetModuleFromNameW(DMA_HANDLE, GetPidFromName("winlogon.exe") | VMMDLL_PID_PROCESS_WITH_KERNELMEMORY, static_cast<LPCWSTR>(L"win32kbase.sys"), &module_info, VMMDLL_MODULE_FLAG_NORMAL);
+				if (!result)
+				{
+					return false;
+				}
+
+				char str[32];
+				if (!VMMDLL_PdbLoad(DMA_HANDLE, GetPidFromName("winlogon.exe") | VMMDLL_PID_PROCESS_WITH_KERNELMEMORY, module_info->vaBase, str))
+				{
+					return false;
+				}
+
+				uintptr_t gafAsyncKeyState;
+				if (!VMMDLL_PdbSymbolAddress(DMA_HANDLE, str, const_cast<LPSTR>("gafAsyncKeyState"), &gafAsyncKeyState))
+				{
+					return false;
+				}
+			}
 			if (gafAsyncKeyStateExport > 0x7FFFFFFFFFFF)
 				return true;
 			return false;
