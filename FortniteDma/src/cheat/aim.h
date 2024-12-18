@@ -6,10 +6,6 @@ namespace aim {
 
 	Vector3 predictLocation(Vector3 target, Vector3 target_velocity, float projectile_speed, float projectile_gravity_scale, float distance)
 	{
-		if (projectile_speed == 0)
-		{
-			return target;
-		}
 		float horizontalTime = distance / projectile_speed;
 		float verticalTime = distance / projectile_speed;
 
@@ -158,7 +154,7 @@ namespace aim {
 			Vector3 target2D = originalTarget2D;
 
 			if (settings::config::Prediction) {
-				if (point::ProjectileSpeed != 0) {
+				if (point::ProjectileSpeed > 0) {
 					target3D = predictLocation(target3D, closestPlayer.Velocity, point::ProjectileSpeed, point::ProjectileGravity, (float)mainCamera.Location.Distance(target3D));
 					target2D = w2s(target3D);
 				}
@@ -178,8 +174,8 @@ namespace aim {
 			while (targetx > 89.9f) targetx = 89.9f;
 			while (targetx < -89.9f) targetx = -89.9f;
 
-			float AngleX = targety * (settings::config::StepsPerDegreeX / settings::config::AimSmoothing);
-			float AngleY = targetx * (settings::config::StepsPerDegreeY / settings::config::AimSmoothing);
+			float AngleX = targety * (settings::config::StepPerDegreeX / settings::config::AimSmoothing);
+			float AngleY = targetx * (settings::config::StepPerDegreeY / settings::config::AimSmoothing);
 
 			if (settings::kmbox::NetKmbox) {
 				kmNet_mouse_move(AngleX, AngleY);

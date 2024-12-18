@@ -48,6 +48,10 @@ void memRefreshLight() {
 }
 
 void memKeysUpdate() {
+
+	if (!settings::config::Aimbot || !settings::config::TriggerBot)
+		return;
+
 	mem.UpdateKeys();
 }
 

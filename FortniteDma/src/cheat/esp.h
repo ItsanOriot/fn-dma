@@ -94,7 +94,6 @@ namespace esp {
 			// box
 			if (settings::config::Box)
 			{
-				ImColor colTxt = ImColor(255, 255, 255, 255);
 				ImColor colBox = ImColor(255, 0, 0, 255);
 				if (IsVis)
 					colBox = ImColor(0, 255, 0, 255);
@@ -123,6 +122,26 @@ namespace esp {
 				);
 
 				ImGui::GetBackgroundDrawList()->AddRect(topLeft, bottomRight, colBox, rd, NULL, tk);
+			}
+
+			//distance
+			if (settings::config::Distance)
+			{
+				ImColor colTxt = ImColor(255, 255, 255, 255);
+
+				float box_height = (abs(player.Top2D.y - player.Bottom2D.y));
+				float box_width = 0.5f * box_height;
+
+				ImVec2 topLeft = ImVec2(player.Bottom2D.x - box_width / 2, player.Top2D.y);
+				ImVec2 bottomRight = ImVec2(player.Bottom2D.x + box_width / 2, player.Bottom2D.y);
+
+				string distanceStr = std::format("({:d}m)", distanceMeters);
+				ImVec2 distanceSize = ImGui::CalcTextSize(distanceStr.c_str());
+				ImVec2 distancePos = ImVec2(
+					topLeft.x + (box_width / 2.0f) - (distanceSize.x / 2.0f),
+					bottomRight.y + 5.0f
+				);
+
 				ImGui::GetBackgroundDrawList()->AddText(distancePos, colTxt, distanceStr.c_str());
 			}
 			

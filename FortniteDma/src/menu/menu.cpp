@@ -76,7 +76,7 @@ void menu::Menu() {
 		ImGui::Separator();
 		ImGui::Text("Aim");
 		ImGui::Checkbox("Aimbot", &settings::config::Aimbot);
-		ImGui::SliderInt("Smooth", &settings::config::AimSmoothing, 1, 100);
+		ImGui::SliderFloat("Smooth", &settings::config::AimSmoothing, 1.1f, 50.f);
 		ImGui::SliderInt("FOV", &settings::config::AimFov, 1, settings::window::Height/2);
 		ImGui::Checkbox("Prediction", &settings::config::Prediction);
 		ImGui::SliderFloat("Mult", &settings::config::PredictionMultiplier, 0.5f, 2.f);
@@ -160,6 +160,7 @@ void menu::Menu() {
 		ImGui::Checkbox("Fuser Mode", &settings::config::Fuser);
 		ImGui::Checkbox("Box", &settings::config::Box);
 		ImGui::Checkbox("Skeleton", &settings::config::Skeleton);
+		ImGui::Checkbox("Distance", &settings::config::Distance);
 		ImGui::Separator();
 
 
@@ -187,46 +188,19 @@ void menu::Menu() {
 		ImGui::Separator();
 
 		if (ImGui::Button("Calibrate Aim")) {
-			Vector3 point = w2s(Vector3());
 
-			Rotation target = targetRotation(mainCamera.Location, Vector3());
-			
 			float currenty = mainCamera.Rotation.y;
 			float currentx = mainCamera.Rotation.x;
-
-			float targety = target.yaw - mainCamera.Rotation.y;
-
-			while (targety > 180.0f) targety -= 360.0f;
-			while (targety < -180.0f) targety += 360.0f;
-
-			float targetx = target.pitch - mainCamera.Rotation.x;
-
-			while (targetx > 89.9f) targetx = 89.9f;
-			while (targetx < -89.9f) targetx = -89.9f;
 
 			const float screenCenterX = settings::window::Width / 2;
 			const float screenCenterY = settings::window::Height / 2;
 
-			float AngleX = 0;
-			float AngleY = 0;
-
-			// ugly
-			if (point.x > screenCenterX)
-				AngleX = ((-((screenCenterX - point.x))));
-			else if (point.x < screenCenterX)
-				AngleX = ((point.x - screenCenterX));
-
-			if (point.y > screenCenterY)
-				AngleY = ((-((screenCenterY - point.y))));
-			else if (point.y < screenCenterY)
-				AngleY = ((point.y - screenCenterY));
-
-			AngleX = AngleX;
-			AngleY = AngleY;
+			float AngleX = 10;
+			float AngleY = 10;
 
 			kmNet_mouse_move(AngleX, AngleY);
 
-			Sleep(500);
+			Sleep(30);
 
 			Vector3 point2 = w2s(Vector3());
 
@@ -237,17 +211,27 @@ void menu::Menu() {
 
 			float newx = mainCamera.Rotation.x - currentx;
 
-			while (newx > 180.0f) newx -= 360.0f;
-			while (newx < -180.0f) newx += 360.0f;
+			while (newx > 89.9f) newx = 89.9f;
+			while (newx < -89.9f) newx = -89.9f;
 
-			settings::config::StepsPerDegreeX = (AngleX / newy) - 1; // - 1 cause its not that precise
-			settings::config::StepsPerDegreeY = (AngleY / newx) + 1; // + 1 cause its not that precise
+			float StepPerDegreeX = (AngleX / newy);
+			float StepPerDegreeY = (AngleY / newx);
 
-			std::cout << hue::green << "(+) " << hue::white << "X calculated step is " << settings::config::StepsPerDegreeX << std::endl;
+			std::cout << hue::green << "(+) " << hue::white << "X calculated step is " << settings::config::StepPerDegreeX << std::endl;
 
-			std::cout << hue::green << "(+) " << hue::white << "Y calculated step is " << settings::config::StepsPerDegreeY << std::endl;
+			std::cout << hue::green << "(+) " << hue::white << "Y calculated step is " << settings::config::StepPerDegreeY << std::endl;
 
-			settings::saveConfig();
+			if (settings::config::StepPerDegreeX < 0 || settings::config::StepPerDegreeX > 100 || 
+				settings::config::StepPerDegreeY > 0 || settings::config::StepPerDegreeY < -100){ 
+				std::cout << hue::yellow << "(/) " << hue::white << "Aim calibration seems to have failed" << std::endl;
+				std::cout << hue::yellow << "(/) " << hue::white << "When calibrating make sure you use your second pc to click the calibrate button" << std::endl;
+				std::cout << hue::yellow << "(/) " << hue::white << "And that your main pc is focused on the game" << std::endl;
+			}
+			else {
+				settings::config::StepPerDegreeX = StepPerDegreeX;
+				settings::config::StepPerDegreeY = StepPerDegreeY;
+				settings::saveConfig();
+			}
 
 		}
 

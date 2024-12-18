@@ -115,7 +115,13 @@ namespace settings {
 					}
 				}
 				else {
-					std::cout << hue::yellow << "(/) " << hue::white << "Failed to open configuration file" << std::endl;
+					std::ofstream fileOut(settings::runtime::configFile);
+					if (fileOut.is_open()) {
+						json combinedConfig;
+						combinedConfig["KmboxNet"] = kmbox::net::toJson();
+						fileOut << combinedConfig.dump(4);
+						fileOut.close();
+					}
 					return false;
 				}
 
@@ -149,13 +155,16 @@ namespace settings {
 		// aim
 		inline bool Aimbot = true;
 		inline int AimFov = 100;
-		inline int AimSmoothing = 10;
+		inline float AimSmoothing = 10;
 		inline int AimKey = 2;
 		inline bool Prediction = true;
 		inline float PredictionMultiplier = 1.f;
 
-		inline float StepsPerDegreeX = 1.f;
-		inline float StepsPerDegreeY = 1.f;
+		inline std::unordered_map<float, float> StepsPerDegreeX;
+		inline std::unordered_map<float, float> StepsPerDegreeY;
+
+		inline float StepPerDegreeX = 10;
+		inline float StepPerDegreeY = 10;
 
 		// trigger
 		inline bool TriggerBot = true;
@@ -165,6 +174,7 @@ namespace settings {
 		// esp
 		inline bool Skeleton = true;
 		inline bool Box = true;
+		inline bool Distance = true;
 
 		// radar
 		inline bool Radar = true;
@@ -184,13 +194,14 @@ namespace settings {
 				{"AimKey", AimKey},
 				{"Prediction", Prediction},
 				{"PredictionMultiplier", PredictionMultiplier},
-				{"StepsPerDegreeX", StepsPerDegreeX},
-				{"StepsPerDegreeY", StepsPerDegreeY},
+				{"StepPerDegreeX", StepPerDegreeX},
+				{"StepPerDegreeY", StepPerDegreeY},
 				{"TriggerBot", TriggerBot},
 				{"TriggerDelay", TriggerDelay},
 				{"TriggerKey", TriggerKey},
 				{"Skeleton", Skeleton},
 				{"Box", Box},
+				{"Distance", Distance},
 				{"RadarX", RadarX},
 				{"RadarY", RadarY},
 				{"Radar", Radar},
@@ -208,14 +219,15 @@ namespace settings {
 			if (j.contains("AimKey")) AimKey = j["AimKey"];
 			if (j.contains("Prediction")) Prediction = j["Prediction"];
 			if (j.contains("PredictionMultiplier")) PredictionMultiplier = j["PredictionMultiplier"];
-			if (j.contains("StepsPerDegreeX")) StepsPerDegreeX = j["StepsPerDegreeX"];
-			if (j.contains("StepsPerDegreeY")) StepsPerDegreeY = j["StepsPerDegreeY"];
+			if (j.contains("StepPerDegreeX")) StepPerDegreeX = j["StepPerDegreeX"];
+			if (j.contains("StepPerDegreeY")) StepPerDegreeY = j["StepPerDegreeY"];
 			if (j.contains("TriggerBot")) TriggerBot = j["TriggerBot"];
 			if (j.contains("TriggerDelay")) TriggerDelay = j["TriggerDelay"];
 			if (j.contains("TriggerKey")) TriggerKey = j["TriggerKey"];
 			if (j.contains("AimFov")) AimFov = j["AimFov"];
 			if (j.contains("Skeleton")) Skeleton = j["Skeleton"];
 			if (j.contains("Box")) Box = j["Box"];
+			if (j.contains("Distance")) Distance = j["Distance"];
 			if (j.contains("Radar")) Radar = j["Radar"];
 			if (j.contains("RadarX")) RadarX = j["RadarX"];
 			if (j.contains("RadarY")) RadarY = j["RadarY"];

@@ -217,7 +217,6 @@ int DMAHandler::Init(const wchar_t* wname, bool memMap)
 			if (!DumpMemoryMap())
 			{
 				std::cout << hue::yellow << "(/) " << hue::white << "Failed to dump memory" << std::endl;
-				return 1;
 			}
 			else
 			{
@@ -232,6 +231,7 @@ int DMAHandler::Init(const wchar_t* wname, bool memMap)
 				args[argc++] = const_cast<LPCSTR>("mmap.txt");
 			}
 		}
+
 		DMA_HANDLE = VMMDLL_Initialize(argc, args);
 		if (!DMA_HANDLE)
 		{
@@ -260,6 +260,7 @@ int DMAHandler::Init(const wchar_t* wname, bool memMap)
 	else
 		PROCESS_INITIALIZED = TRUE;
 
+	return 0;
 }
 
 void DMAHandler::RefreshLight() {
