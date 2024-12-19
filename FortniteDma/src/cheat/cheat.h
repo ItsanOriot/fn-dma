@@ -577,7 +577,7 @@ END:
 void weaponUpdate()
 {
 	// features that need the weapon updated
-	if (!settings::config::Aimbot || !settings::config::TriggerBot)
+	if (!settings::config::Aimbot && !settings::config::TriggerBot)
 		return;
 
 	mem.SClear(mem.hS5);

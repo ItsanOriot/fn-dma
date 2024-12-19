@@ -160,8 +160,8 @@ namespace settings {
 		inline bool Prediction = true;
 		inline float PredictionMultiplier = 1.f;
 
-		inline std::unordered_map<float, float> StepsPerDegreeX;
-		inline std::unordered_map<float, float> StepsPerDegreeY;
+		inline CircularBuffer StepsX(1000);
+		inline CircularBuffer StepsY(1000);
 
 		inline float StepPerDegreeX = 10;
 		inline float StepPerDegreeY = 10;
@@ -173,7 +173,7 @@ namespace settings {
 
 		// esp
 		inline bool Skeleton = true;
-		inline bool Box = true;
+		inline bool Box = false;
 		inline bool Distance = true;
 
 		// radar

@@ -317,6 +317,7 @@ ULONG64 DMAHandler::GetBaseAddress()
 {
 	if (!processInfo.base) {
 		VMMDLL_ConfigSet(DMA_HANDLE, VMMDLL_OPT_REFRESH_ALL, 1);
+		Sleep(1000);
 		processInfo.base = VMMDLL_ProcessGetModuleBase(DMA_HANDLE, processInfo.pid, const_cast<LPWSTR>(processInfo.wname));
 	}
 

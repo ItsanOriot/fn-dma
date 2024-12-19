@@ -192,17 +192,12 @@ void menu::Menu() {
 			float currenty = mainCamera.Rotation.y;
 			float currentx = mainCamera.Rotation.x;
 
-			const float screenCenterX = settings::window::Width / 2;
-			const float screenCenterY = settings::window::Height / 2;
-
-			float AngleX = 10;
-			float AngleY = 10;
+			float AngleX = -10;
+			float AngleY = -10;
 
 			kmNet_mouse_move(AngleX, AngleY);
 
-			Sleep(30);
-
-			Vector3 point2 = w2s(Vector3());
+			Sleep(50);
 
 			float newy = mainCamera.Rotation.y - currenty;
 
@@ -217,12 +212,12 @@ void menu::Menu() {
 			float StepPerDegreeX = (AngleX / newy);
 			float StepPerDegreeY = (AngleY / newx);
 
-			std::cout << hue::green << "(+) " << hue::white << "X calculated step is " << settings::config::StepPerDegreeX << std::endl;
+			std::cout << hue::green << "(+) " << hue::white << "X calculated step is " << StepPerDegreeX << std::endl;
 
-			std::cout << hue::green << "(+) " << hue::white << "Y calculated step is " << settings::config::StepPerDegreeY << std::endl;
+			std::cout << hue::green << "(+) " << hue::white << "Y calculated step is " << StepPerDegreeY << std::endl;
 
-			if (settings::config::StepPerDegreeX < 0 || settings::config::StepPerDegreeX > 100 || 
-				settings::config::StepPerDegreeY > 0 || settings::config::StepPerDegreeY < -100){ 
+			if (StepPerDegreeX < 0 || StepPerDegreeX > 100 ||
+				StepPerDegreeY > 0 || StepPerDegreeY < -100){
 				std::cout << hue::yellow << "(/) " << hue::white << "Aim calibration seems to have failed" << std::endl;
 				std::cout << hue::yellow << "(/) " << hue::white << "When calibrating make sure you use your second pc to click the calibrate button" << std::endl;
 				std::cout << hue::yellow << "(/) " << hue::white << "And that your main pc is focused on the game" << std::endl;
@@ -232,7 +227,6 @@ void menu::Menu() {
 				settings::config::StepPerDegreeY = StepPerDegreeY;
 				settings::saveConfig();
 			}
-
 		}
 
 		ImGui::SetCursorPos(ImVec2(630, 310));

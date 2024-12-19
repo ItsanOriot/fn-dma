@@ -13,8 +13,8 @@
 #include <string>
 #include "console/console.h"
 
-#include "settings.h"
 #include "performance.h"
+#include "settings.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -49,7 +49,8 @@ void memRefreshLight() {
 
 void memKeysUpdate() {
 
-	if (!settings::config::Aimbot || !settings::config::TriggerBot)
+	// features that need the keys updated
+	if (!settings::config::Aimbot && !settings::config::TriggerBot)
 		return;
 
 	mem.UpdateKeys();
