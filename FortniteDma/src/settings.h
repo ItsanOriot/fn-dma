@@ -236,7 +236,7 @@ namespace settings {
 			if (j.contains("Skeleton")) Skeleton = j["Skeleton"];
 			if (j.contains("Box")) Box = j["Box"];
 			if (j.contains("Distance")) Distance = j["Distance"];
-			if (j.contains("Bots")) Distance = j["Bots"];
+			if (j.contains("Bots")) Bots = j["Bots"];
 			if (j.contains("Radar")) Radar = j["Radar"];
 			if (j.contains("RadarX")) RadarX = j["RadarX"];
 			if (j.contains("RadarY")) RadarY = j["RadarY"];

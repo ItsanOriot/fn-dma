@@ -189,6 +189,9 @@ void menu::Menu() {
 		ImGui::Checkbox("Internals", &settings::menu::Internals);
 		ImGui::Separator();
 
+		if (ImGui::Button("Close Cheat")) {
+			exit(0);
+		}
 		//if (ImGui::Button("Calibrate Aim")) {
 
 		//	float currenty = mainCamera.Rotation.y;

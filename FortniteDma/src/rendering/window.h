@@ -298,19 +298,19 @@ bool UpdateWindow(void (*mainfunc)()) {
 
 	swap_chain->Present(settings::config::vSync ? 1:0, 0);
 
-	D3D11_QUERY_DESC queryDesc = { D3D11_QUERY_EVENT, 0 };
-	ID3D11Query* frameQuery;
-	device->CreateQuery(&queryDesc, &frameQuery);
+	//D3D11_QUERY_DESC queryDesc = { D3D11_QUERY_EVENT, 0 };
+	//ID3D11Query* frameQuery;
+	//device->CreateQuery(&queryDesc, &frameQuery);
 
-	// Insert a fence-like query at the end of the frame
-	device_context->End(frameQuery);
+	//// Insert a fence-like query at the end of the frame
+	//device_context->End(frameQuery);
 
-	// Wait for the GPU to signal the query has been completed
-	while (device_context->GetData(frameQuery, NULL, 0, 0) != S_OK) {
-		// Wait (this ensures the CPU doesn't proceed prematurely)
-	}
+	//// Wait for the GPU to signal the query has been completed
+	//while (device_context->GetData(frameQuery, NULL, 0, 0) != S_OK) {
+	//	// Wait (this ensures the CPU doesn't proceed prematurely)
+	//}
 
-	frameQuery->Release();
+	//frameQuery->Release();
 
 	__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
 	stats::mainThreadData.addValue(static_cast<float>(elapsed));

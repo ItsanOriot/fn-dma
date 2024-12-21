@@ -188,10 +188,7 @@ namespace aim {
 			float AngleY = targetx * (yStep / settings::config::AimSmoothing); // settings::config::StepPerDegreeY
 
 			if (settings::config::MoonlightAim) {
-				Vector3 w2splr = w2s(target3D);
-				float tgtX = w2splr.x - 960;
-				float tgtY = w2splr.y - 540;
-				mouse_event(MOUSEEVENTF_MOVE, tgtX, tgtY, 0, 0);
+				mouse_event(MOUSEEVENTF_MOVE, AngleX, AngleY, 0, 0);
 			}
 			else if (settings::kmbox::NetKmbox) {
 				kmNet_mouse_move(AngleX, AngleY);
