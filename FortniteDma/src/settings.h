@@ -161,7 +161,6 @@ namespace settings {
 		inline int AimKey = 2;
 		inline bool Prediction = true;
 		inline float PredictionMultiplier = 1.f;
-
 		inline bool MoonlightAim = false;
 
 		inline float StepPerDegreeX = 10;
@@ -176,6 +175,7 @@ namespace settings {
 		inline bool Skeleton = true;
 		inline bool Box = false;
 		inline bool Distance = true;
+		inline bool Bots = false;
 
 		// radar
 		inline bool Radar = true;
@@ -197,15 +197,16 @@ namespace settings {
 				{"AimKey", AimKey},
 				{"Prediction", Prediction},
 				{"PredictionMultiplier", PredictionMultiplier},
-				{"MoonlightAim", MoonlightAim},
 				{"StepPerDegreeX", StepPerDegreeX},
 				{"StepPerDegreeY", StepPerDegreeY},
+				{"MoonlightAim", MoonlightAim},
 				{"TriggerBot", TriggerBot},
 				{"TriggerDelay", TriggerDelay},
 				{"TriggerKey", TriggerKey},
 				{"Skeleton", Skeleton},
 				{"Box", Box},
 				{"Distance", Distance},
+				{"Bots", Bots},
 				{"RadarX", RadarX},
 				{"RadarY", RadarY},
 				{"Radar", Radar},
@@ -225,9 +226,9 @@ namespace settings {
 			if (j.contains("AimKey")) AimKey = j["AimKey"];
 			if (j.contains("Prediction")) Prediction = j["Prediction"];
 			if (j.contains("PredictionMultiplier")) PredictionMultiplier = j["PredictionMultiplier"];
-			if (j.contains("MoonlightAim")) MoonlightAim = j["MoonlightAim"];
 			if (j.contains("StepPerDegreeX")) StepPerDegreeX = j["StepPerDegreeX"];
 			if (j.contains("StepPerDegreeY")) StepPerDegreeY = j["StepPerDegreeY"];
+			if (j.contains("MoonlightAim")) MoonlightAim = j["MoonlightAim"];
 			if (j.contains("TriggerBot")) TriggerBot = j["TriggerBot"];
 			if (j.contains("TriggerDelay")) TriggerDelay = j["TriggerDelay"];
 			if (j.contains("TriggerKey")) TriggerKey = j["TriggerKey"];
@@ -235,6 +236,7 @@ namespace settings {
 			if (j.contains("Skeleton")) Skeleton = j["Skeleton"];
 			if (j.contains("Box")) Box = j["Box"];
 			if (j.contains("Distance")) Distance = j["Distance"];
+			if (j.contains("Bots")) Distance = j["Bots"];
 			if (j.contains("Radar")) Radar = j["Radar"];
 			if (j.contains("RadarX")) RadarX = j["RadarX"];
 			if (j.contains("RadarY")) RadarY = j["RadarY"];

@@ -69,7 +69,7 @@ namespace aim {
 	{
 		if (!settings::runtime::hotKeys)
 			return;
-		if (!settings::kmbox::SerialKmbox && !settings::kmbox::NetKmbox) 
+		if (!settings::kmbox::SerialKmbox && !settings::kmbox::NetKmbox && !settings::config::MoonlightAim)
 			return;
 		if (!settings::config::Aimbot) 
 			return;
@@ -77,7 +77,7 @@ namespace aim {
 		// not in game / alive
 		if (!point::Player || !point::PlayerState)
 			return;
-		
+
 		if (mem.IsKeyDown(settings::config::AimKey)) {
 			std::unordered_map<uintptr_t, PlayerCache> PlayerList = secondPlayerList;
 
@@ -175,7 +175,7 @@ namespace aim {
 
 			float xPercent = point::MouseSensX / 0.25f;
 			float xStep = 1.8f * (1.f / xPercent);
-
+			
 			float yPercent = point::MouseSensY / 0.25f;
 			float yStep = -1.8f * (1.f / yPercent);
 
@@ -188,7 +188,10 @@ namespace aim {
 			float AngleY = targetx * (yStep / settings::config::AimSmoothing); // settings::config::StepPerDegreeY
 
 			if (settings::config::MoonlightAim) {
-				mouse_event(MOUSEEVENTF_MOVE, AngleX, AngleY, 0, 0);
+				Vector3 w2splr = w2s(target3D);
+				float tgtX = w2splr.x - 960;
+				float tgtY = w2splr.y - 540;
+				mouse_event(MOUSEEVENTF_MOVE, tgtX, tgtY, 0, 0);
 			}
 			else if (settings::kmbox::NetKmbox) {
 				kmNet_mouse_move(AngleX, AngleY);
@@ -208,7 +211,7 @@ namespace aim {
 		if (!settings::runtime::hotKeys)
 			return;
 
-		if (!settings::kmbox::SerialKmbox && !settings::kmbox::NetKmbox)
+		if (!settings::kmbox::SerialKmbox && !settings::kmbox::NetKmbox && !settings::config::MoonlightAim)
 			return;
 
 		if (!settings::config::TriggerBot)
@@ -221,7 +224,6 @@ namespace aim {
 				mouse_event(MOUSEEVENTF_LEFTUP, mainCamera.Rotation.x, mainCamera.Rotation.y, 0, 0);
 			else
 				kmNet_mouse_left(false);
-
 			clicked = false;
 		}
 

@@ -101,7 +101,7 @@ void menu::Menu() {
 		ImGui::Text("Trigger");
 		ImGui::Checkbox("TriggerBot", &settings::config::TriggerBot);
 		ImGui::SliderInt("Delay", &settings::config::TriggerDelay, 1, 100);
-		
+
 		if (ImGui::Button(selectingTrigger ? "Press key" : std::format("Trg Key: {:d}", settings::config::TriggerKey).c_str()))
 			if (!selectingAim)
 				selectingTrigger = !selectingTrigger;
@@ -158,7 +158,7 @@ void menu::Menu() {
 		ImGui::Text("Esp");
 		ImGui::Checkbox("Fuser Mode", &settings::config::Fuser);
 		ImGui::Checkbox("vSync", &settings::config::vSync);
-		ImGui::Checkbox("Show fov", &settings::config::ShowAimFov);
+		ImGui::Checkbox("Show FOV", &settings::config::ShowAimFov);
 		ImGui::Separator();
 		ImGui::Checkbox("Box", &settings::config::Box);
 		ImGui::Checkbox("Skeleton", &settings::config::Skeleton);
