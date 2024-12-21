@@ -30,12 +30,14 @@ void newInfo()
 
 		mem.SPrepare(mem.hS, point::va_text + offsets::Uworld, sizeof(uintptr_t));
 
-		mem.SPrepare(mem.hS, point::Uworld + offsets::CameraLocationPointer, sizeof(uintptr_t));
-		mem.SPrepare(mem.hS, point::Uworld + offsets::CameraRotationPointer, sizeof(uintptr_t));
+		if (point::Uworld) {
+			mem.SPrepare(mem.hS, point::Uworld + offsets::CameraLocationPointer, sizeof(uintptr_t));
+			mem.SPrepare(mem.hS, point::Uworld + offsets::CameraRotationPointer, sizeof(uintptr_t));
 
-		mem.SPrepare(mem.hS, point::Uworld + offsets::GameInstance, sizeof(uintptr_t));
-		mem.SPrepare(mem.hS, point::Uworld + offsets::PersistentLevel, sizeof(uintptr_t));
-		mem.SPrepare(mem.hS, point::Uworld + offsets::GameState, sizeof(uintptr_t));
+			mem.SPrepare(mem.hS, point::Uworld + offsets::GameInstance, sizeof(uintptr_t));
+			mem.SPrepare(mem.hS, point::Uworld + offsets::PersistentLevel, sizeof(uintptr_t));
+			mem.SPrepare(mem.hS, point::Uworld + offsets::GameState, sizeof(uintptr_t));
+		}
 
 		if (point::GameInstance) {
 			mem.SPrepare(mem.hS, point::GameInstance + offsets::LocalPlayers, sizeof(uintptr_t));

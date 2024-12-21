@@ -101,7 +101,6 @@ void menu::Menu() {
 		ImGui::Text("Trigger");
 		ImGui::Checkbox("TriggerBot", &settings::config::TriggerBot);
 		ImGui::SliderInt("Delay", &settings::config::TriggerDelay, 1, 100);
-
 		
 		if (ImGui::Button(selectingTrigger ? "Press key" : std::format("Trg Key: {:d}", settings::config::TriggerKey).c_str()))
 			if (!selectingAim)
@@ -158,6 +157,9 @@ void menu::Menu() {
 		ImGui::Separator();
 		ImGui::Text("Esp");
 		ImGui::Checkbox("Fuser Mode", &settings::config::Fuser);
+		ImGui::Checkbox("vSync", &settings::config::vSync);
+		ImGui::Checkbox("Show fov", &settings::config::ShowAimFov);
+		ImGui::Separator();
 		ImGui::Checkbox("Box", &settings::config::Box);
 		ImGui::Checkbox("Skeleton", &settings::config::Skeleton);
 		ImGui::Checkbox("Distance", &settings::config::Distance);
@@ -187,47 +189,47 @@ void menu::Menu() {
 		ImGui::Checkbox("Internals", &settings::menu::Internals);
 		ImGui::Separator();
 
-		if (ImGui::Button("Calibrate Aim")) {
+		//if (ImGui::Button("Calibrate Aim")) {
 
-			float currenty = mainCamera.Rotation.y;
-			float currentx = mainCamera.Rotation.x;
+		//	float currenty = mainCamera.Rotation.y;
+		//	float currentx = mainCamera.Rotation.x;
 
-			float AngleX = -10;
-			float AngleY = -10;
+		//	float AngleX = -10;
+		//	float AngleY = -10;
 
-			kmNet_mouse_move(AngleX, AngleY);
+		//	kmNet_mouse_move(AngleX, AngleY);
 
-			Sleep(50);
+		//	Sleep(50);
 
-			float newy = mainCamera.Rotation.y - currenty;
+		//	float newy = mainCamera.Rotation.y - currenty;
 
-			while (newy > 180.0f) newy -= 360.0f;
-			while (newy < -180.0f) newy += 360.0f;
+		//	while (newy > 180.0f) newy -= 360.0f;
+		//	while (newy < -180.0f) newy += 360.0f;
 
-			float newx = mainCamera.Rotation.x - currentx;
+		//	float newx = mainCamera.Rotation.x - currentx;
 
-			while (newx > 89.9f) newx = 89.9f;
-			while (newx < -89.9f) newx = -89.9f;
+		//	while (newx > 89.9f) newx = 89.9f;
+		//	while (newx < -89.9f) newx = -89.9f;
 
-			float StepPerDegreeX = (AngleX / newy);
-			float StepPerDegreeY = (AngleY / newx);
+		//	float StepPerDegreeX = (AngleX / newy);
+		//	float StepPerDegreeY = (AngleY / newx);
 
-			std::cout << hue::green << "(+) " << hue::white << "X calculated step is " << StepPerDegreeX << std::endl;
+		//	std::cout << hue::green << "(+) " << hue::white << "X calculated step is " << StepPerDegreeX << std::endl;
 
-			std::cout << hue::green << "(+) " << hue::white << "Y calculated step is " << StepPerDegreeY << std::endl;
+		//	std::cout << hue::green << "(+) " << hue::white << "Y calculated step is " << StepPerDegreeY << std::endl;
 
-			if (StepPerDegreeX < 0 || StepPerDegreeX > 100 ||
-				StepPerDegreeY > 0 || StepPerDegreeY < -100){
-				std::cout << hue::yellow << "(/) " << hue::white << "Aim calibration seems to have failed" << std::endl;
-				std::cout << hue::yellow << "(/) " << hue::white << "When calibrating make sure you use your second pc to click the calibrate button" << std::endl;
-				std::cout << hue::yellow << "(/) " << hue::white << "And that your main pc is focused on the game" << std::endl;
-			}
-			else {
-				settings::config::StepPerDegreeX = StepPerDegreeX;
-				settings::config::StepPerDegreeY = StepPerDegreeY;
-				settings::saveConfig();
-			}
-		}
+		//	if (StepPerDegreeX < 0 || StepPerDegreeX > 100 ||
+		//		StepPerDegreeY > 0 || StepPerDegreeY < -100){
+		//		std::cout << hue::yellow << "(/) " << hue::white << "Aim calibration seems to have failed" << std::endl;
+		//		std::cout << hue::yellow << "(/) " << hue::white << "When calibrating make sure you use your second pc to click the calibrate button" << std::endl;
+		//		std::cout << hue::yellow << "(/) " << hue::white << "And that your main pc is focused on the game" << std::endl;
+		//	}
+		//	else {
+		//		settings::config::StepPerDegreeX = StepPerDegreeX;
+		//		settings::config::StepPerDegreeY = StepPerDegreeY;
+		//		settings::saveConfig();
+		//	}
+		//}
 
 		ImGui::SetCursorPos(ImVec2(630, 310));
 		ImGui::Separator(); // why does this one not show?
@@ -516,9 +518,9 @@ void menu::AdvancedDebugWindow() {
 		ImGui::SetCursorPos(ImVec2(x, y += 20));
 		ImGui::Text(std::format("Seconds -> {:.2f}", point::Seconds).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 20));
-		ImGui::Text(std::format("Mouse Sens X -> {:.2f}", point::MouseSensX).c_str());
+		ImGui::Text(std::format("Mouse Sens X -> {:.4f}", point::MouseSensX).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 20));
-		ImGui::Text(std::format("Mouse Sens Y -> {:.2f}", point::MouseSensY).c_str());
+		ImGui::Text(std::format("Mouse Sens Y -> {:.4f}", point::MouseSensY).c_str());
 		ImGui::SetCursorPos(ImVec2(x, y += 40));
 		ImGui::Text(std::format("Local Team -> {:d}", local_player::localTeam).c_str());
 		//ImGui::SetCursorPos(ImVec2(x, y += 20));

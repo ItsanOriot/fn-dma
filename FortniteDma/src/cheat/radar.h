@@ -70,11 +70,14 @@ namespace radar {
 		ImVec2 RealSiz = ImGui::GetWindowSize();
 
 		// minimum size
-		if (RealSiz.x < 50) {
-			ImGui::SetWindowSize(ImVec2(50, RealSiz.y));
-		}
-		if (RealSiz.y < 50) {
-			ImGui::SetWindowSize(ImVec2(RealSiz.x, 50));
+		{
+			float minSize = 150;
+			if (RealSiz.x < minSize) {
+				ImGui::SetWindowSize(ImVec2(minSize, RealSiz.y));
+			}
+			if (RealSiz.y < minSize) {
+				ImGui::SetWindowSize(ImVec2(RealSiz.x, minSize));
+			}
 		}
 
 		ImVec2 siz = ImVec2(RealSiz.x - 10, RealSiz.y - 10);
@@ -97,9 +100,10 @@ namespace radar {
 		ImU32 fillColor = IM_COL32(25, 25, 25, 255);
 		drawList->AddRectFilled(pos, ImVec2(pos.x + siz.x, pos.y + siz.y), fillColor);
 
-		ImU32 lineColor = IM_COL32(255, 255, 255, 255);
-		drawList->AddLine(RadarCenter, pos, lineColor);
-		drawList->AddLine(RadarCenter, ImVec2(pos.x + siz.x, pos.y), lineColor);
+		ImU32 lineColor = IM_COL32(75, 75, 75, 255);
+		drawList->AddLine(RadarCenter, ImVec2(pos.x + (siz.x * 0.10), pos.y), lineColor, 4.f);
+		drawList->AddLine(RadarCenter, ImVec2(pos.x + (siz.x * 0.90), pos.y), lineColor, 4.f);
+		drawList->AddLine(RadarCenter, ImVec2(pos.x + (siz.x / 2), pos.y + siz.y), lineColor, 5.f);
 
 		// draw the points in the radar
 		for (auto it : PlayerList) {

@@ -1,6 +1,25 @@
 ﻿#pragma once
 
 namespace esp {
+	// idk :(
+	bool shouldDisplayPlayer(PlayerCache player) {
+
+		auto it = secondPlayerList.find(player.PlayerState);
+		if (it != secondPlayerList.end()) {
+
+			double dist = std::sqrt(std::pow(player.Head2D.x - settings::window::Width / 2, 2) + std::pow(player.Head2D.y - settings::window::Height / 2, 2));
+
+			if (player.isDying || dist > settings::config::AimFov)
+				return false;
+
+		}
+		else {
+			return false;
+		}
+
+		return true;
+	}
+
 	void renderPlayers()
 	{
 
@@ -14,6 +33,10 @@ namespace esp {
 		int invalidPlayersLooped = 0;
 		int teammatesSkipped = 0;
 		int bots = 0;
+
+		//// repetitive
+		//double closest = HUGE;
+		//PlayerCache closestPlayer{};
 
 		for (auto it : secondPlayerList) {
 			PlayerCache player = it.second;
@@ -144,7 +167,22 @@ namespace esp {
 
 				ImGui::GetBackgroundDrawList()->AddText(distancePos, colTxt, distanceStr.c_str());
 			}
-			
+
+			//double distance2D = std::sqrt(std::pow(player.Head2D.x - settings::window::Width / 2, 2) + std::pow(player.Head2D.y - settings::window::Height / 2, 2));
+
+			//if (distance2D < settings::config::AimFov) {
+			//	if (distance2D < closest) {
+			//		closestPlayer = player;
+			//		closest = distance2D;
+			//	}
+			//}
+		}
+
+		if (settings::config::Aimbot && settings::config::Prediction && aim::Targetting) {
+			if (point::ProjectileSpeed > 0 && shouldDisplayPlayer(aim::target)) {
+				Vector3 pred = w2s(aim::predictLocation(aim::target.Head3D, aim::target.Velocity, point::ProjectileSpeed, point::ProjectileGravity, (float)mainCamera.Location.Distance(aim::target.Head3D)));
+				ImGui::GetBackgroundDrawList()->AddCircleFilled(ImVec2(pred.x, pred.y), 5, ImColor(255, 255, 255, 255), 20);
+			}
 		}
 
 		// stats

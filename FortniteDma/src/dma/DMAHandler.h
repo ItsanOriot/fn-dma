@@ -191,31 +191,31 @@ public:
 
 	bool SCreate()
 	{
-		hS = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, VMMDLL_FLAG_NOCACHE);
+		hS = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
 		if (hS == NULL) {
 			std::cout << hue::red << "(!) " << hue::white << "Failed to create scatter handle 1" << std::endl;
 			return false;
 		}
 
-		hS2 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, VMMDLL_FLAG_NOCACHE);
+		hS2 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
 		if (hS2 == NULL) {
 			std::cout << hue::red << "(!) " << hue::white << "Failed to create scatter handle 2" << std::endl;
 			return false;
 		}
 
-		hS3 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, VMMDLL_FLAG_NOCACHE);
+		hS3 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
 		if (hS3 == NULL) {
 			std::cout << hue::red << "(!) " << hue::white << "Failed to create scatter handle 3" << std::endl;
 			return false;
 		}
 
-		hS4 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, VMMDLL_FLAG_NOCACHE);
+		hS4 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
 		if (hS4 == NULL) {
 			std::cout << hue::red << "(!) " << hue::white << "Failed to create scatter handle 4" << std::endl;
 			return false;
 		}
 
-		hS5 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, VMMDLL_FLAG_NOCACHE);
+		hS5 = VMMDLL_Scatter_Initialize(DMA_HANDLE, processInfo.pid, VMMDLL_FLAG_NOCACHE | VMMDLL_FLAG_NOPAGING | VMMDLL_FLAG_ZEROPAD_ON_FAIL | VMMDLL_FLAG_NOPAGING_IO);
 		if (hS5 == NULL) {
 			std::cout << hue::red << "(!) " << hue::white << "Failed to create scatter handle 5" << std::endl;
 			return false;

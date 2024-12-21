@@ -88,7 +88,7 @@ int DMAHandler::FixDTB()
 
 	std::vector<uint64_t> possibleDTBs;
 	char* pLineStart = reinterpret_cast<char*>(bytes);
-	for (size_t i = 0; i < 1000; ++i) { //Loop over it 1000 times, assumign they'll never have more than 1k processes ran at the same time
+	for (size_t i = 0; i < 2500; ++i) { //Loop over it 1000 times, assumign they'll never have more than 1k processes ran at the same time
 		char* pLineEnd = strchr(pLineStart, '\n');
 		if (pLineEnd == nullptr)
 			break;
@@ -317,7 +317,6 @@ ULONG64 DMAHandler::GetBaseAddress()
 {
 	if (!processInfo.base) {
 		VMMDLL_ConfigSet(DMA_HANDLE, VMMDLL_OPT_REFRESH_ALL, 1);
-		Sleep(1000);
 		processInfo.base = VMMDLL_ProcessGetModuleBase(DMA_HANDLE, processInfo.pid, const_cast<LPWSTR>(processInfo.wname));
 	}
 

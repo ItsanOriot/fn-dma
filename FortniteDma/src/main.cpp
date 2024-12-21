@@ -99,13 +99,6 @@ bool on_initialize() {
 	if (fixResult == 1) // fix not needed
 		std::cout << hue::green << "(+) " << hue::white << "Dtb fix and tables caching was not needed" << std::endl;
 
-	if (!mem.SCreate()) {
-		std::cout << hue::red << "(!) " << hue::white << "Failed to initialize all handles" << std::endl;
-		return false;
-	}
-
-	std::cout << hue::green << "(+) " << hue::white << "Scatter handles Created" << std::endl;
-
 	// idk why sometimes it fails
 	point::Base = mem.GetBaseAddress();
 	if (!point::Base)
@@ -115,6 +108,13 @@ bool on_initialize() {
 	}
 
 	std::cout << hue::green << "(+) " << hue::white << "Successfully refreshed process" << std::endl;
+
+	if (!mem.SCreate()) {
+		std::cout << hue::red << "(!) " << hue::white << "Failed to initialize all handles" << std::endl;
+		return false;
+	}
+
+	std::cout << hue::green << "(+) " << hue::white << "Scatter handles Created" << std::endl;	
 	
 	if (!mem.InitKeyboard()) 
 	{
@@ -122,9 +122,8 @@ bool on_initialize() {
 	}
 	else {
 		settings::runtime::hotKeys = true;
+		std::cout << hue::green << "(+) " << hue::white << "Initialized keyboard hotkeys" << std::endl;
 	}
-
-	std::cout << hue::green << "(+) " << hue::white << "Initialized keyboard hotkeys" << std::endl;
 
 	// no longer any offset (for now)
 	point::va_text = point::Base;
@@ -139,13 +138,13 @@ bool on_initialize() {
 		feature RefreshLight = { memRefreshLight , 1, 5000 };
 		memoryList.push_back(RefreshLight);
 
-		// update uworld and basics LOW PRIORITY
-		feature GDataUpdate = { newInfo , 1, 2000 };
+		// update uworld and basics LOW PRIORITY / FAST
+		feature GDataUpdate = { newInfo , 1, 1000 };
 		memoryList.push_back(GDataUpdate);
 
-		// update local weapon projectile staes MID PRIORITY
-		feature WeaponStatsUpdate = { weaponUpdate, 1, 500 };
-		memoryList.push_back(WeaponStatsUpdate);
+		// update local weapon projectile stats MID PRIORITY
+		feature WeaponUpdate = { weaponUpdate, 1, 500 };
+		memoryList.push_back(WeaponUpdate);
 
 		// update player list MID PRIORITY
 		feature PlayerListUpdate = { updatePlayerList , 1, 1000 };
@@ -167,7 +166,6 @@ bool on_initialize() {
 		feature Aimbot = { aim::updateAimbot, 1, 5 };
 		memoryList.push_back(Aimbot);
 
-
 	}
 
 	// main thread features
@@ -175,10 +173,6 @@ bool on_initialize() {
 		// health checks (not many)
 		feature HealthCheck = { healthChecks, 1, 100 };
 		mainList.push_back(HealthCheck);
-
-		//// aimbot
-		//feature Aimbot = { aim::updateAimbot, 1, 10 };
-		//mainList.push_back(Aimbot);
 
 		// triggerbot
 		feature Triggerbot = { aim::updateTriggerBot, 1, 5 };
@@ -250,14 +244,35 @@ void mainFeatures() {
 
 void mainloop() {
 
-	if (ImGui::IsKeyPressed(ImGuiKey_Insert))
-		settings::menu::open = !settings::menu::open;
+	if (!settings::config::MoonlightAim) {
+		if (ImGui::IsKeyPressed(ImGuiKey_Insert))
+			settings::menu::open = !settings::menu::open;
+	}
+	else {
+		if (GetAsyncKeyState(VK_INSERT) & 1) {
+			settings::menu::open = !settings::menu::open;
+		}
+		ImGuiIO& io = ImGui::GetIO();
+		io.DeltaTime = 1.0f / 60.0f;
+		POINT p;
+		GetCursorPos(&p);
+		io.MousePos.x = p.x;
+		io.MousePos.y = p.y;
+		if (GetAsyncKeyState(0x1)) {
+			io.MouseDown[0] = true;
+			io.MouseClicked[0] = true;
+			io.MouseClickedPos[0].x = io.MousePos.x;
+			io.MouseClickedPos[0].x = io.MousePos.y;
+		}
+		else
+			io.MouseDown[0] = false;
+	}
 
 	if (settings::menu::open)
 		menu::Menu();
 
 	// fov idk where to put it
-	if (settings::config::Aimbot) ImGui::GetBackgroundDrawList()->AddCircle(ImVec2(settings::window::Width/2, settings::window::Height/2), settings::config::AimFov, ImColor(255,255,255,255), 1000, 1.f);
+	if (settings::config::Aimbot && settings::config::ShowAimFov) ImGui::GetBackgroundDrawList()->AddCircle(ImVec2(settings::window::Width/2, settings::window::Height/2), settings::config::AimFov, ImColor(255,255,255,255), 1000, 1.f);
 
 	mainFeatures();
 

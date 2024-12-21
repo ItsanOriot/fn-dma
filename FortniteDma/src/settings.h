@@ -8,7 +8,7 @@ namespace settings {
 	// general
 	namespace runtime {
 		inline int version_major = 1;
-		inline int version_minor = 1;
+		inline int version_minor = 2;
 		inline bool criticalPriority = true;
 		inline bool headless = false; // no console
 		inline bool windowless = false; // no window
@@ -151,20 +151,21 @@ namespace settings {
 	namespace config {
 		// misc
 		inline bool Fuser = false;
+		inline bool vSync = false;
 
 		// aim
 		inline bool Aimbot = true;
 		inline int AimFov = 100;
+		inline bool ShowAimFov = false;
 		inline float AimSmoothing = 10;
 		inline int AimKey = 2;
 		inline bool Prediction = true;
 		inline float PredictionMultiplier = 1.f;
 
-		inline CircularBuffer StepsX(1000);
-		inline CircularBuffer StepsY(1000);
+		inline bool MoonlightAim = false;
 
 		inline float StepPerDegreeX = 10;
-		inline float StepPerDegreeY = 10;
+		inline float StepPerDegreeY = -10;
 
 		// trigger
 		inline bool TriggerBot = true;
@@ -188,12 +189,15 @@ namespace settings {
 		inline json toJson() {
 			return {
 				{"Fuser", Fuser},
+				{"vSync", vSync},
 				{"Aimbot", Aimbot},
 				{"AimFov", AimFov},
+				{"ShowAimFov", ShowAimFov},
 				{"AimSmoothing", AimSmoothing},
 				{"AimKey", AimKey},
 				{"Prediction", Prediction},
 				{"PredictionMultiplier", PredictionMultiplier},
+				{"MoonlightAim", MoonlightAim},
 				{"StepPerDegreeX", StepPerDegreeX},
 				{"StepPerDegreeY", StepPerDegreeY},
 				{"TriggerBot", TriggerBot},
@@ -213,12 +217,15 @@ namespace settings {
 		}
 		inline void fromJson(const json& j) {
 			if (j.contains("Fuser")) Fuser = j["Fuser"];
+			if (j.contains("vSync")) vSync = j["vSync"];
 			if (j.contains("Aimbot")) Aimbot = j["Aimbot"];
 			if (j.contains("AimFov")) AimFov = j["AimFov"];
+			if (j.contains("ShowAimFov")) ShowAimFov = j["ShowAimFov"];
 			if (j.contains("AimSmoothing")) AimSmoothing = j["AimSmoothing"];
 			if (j.contains("AimKey")) AimKey = j["AimKey"];
 			if (j.contains("Prediction")) Prediction = j["Prediction"];
 			if (j.contains("PredictionMultiplier")) PredictionMultiplier = j["PredictionMultiplier"];
+			if (j.contains("MoonlightAim")) MoonlightAim = j["MoonlightAim"];
 			if (j.contains("StepPerDegreeX")) StepPerDegreeX = j["StepPerDegreeX"];
 			if (j.contains("StepPerDegreeY")) StepPerDegreeY = j["StepPerDegreeY"];
 			if (j.contains("TriggerBot")) TriggerBot = j["TriggerBot"];

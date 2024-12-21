@@ -33,20 +33,39 @@ bool InitWindow(HINSTANCE instance, INT cmd_show)
 
 	RegisterClassExW(&wc);
 
-	HWND window = CreateWindowExW(
-		WS_EX_TOPMOST | WS_EX_TRANSPARENT,
-		wc.lpszClassName,
-		settings::window::WindowName,
-		WS_POPUP,
-		0,
-		0,
-		settings::window::Width,
-		settings::window::Height,
-		nullptr,
-		nullptr,
-		wc.hInstance,
-		nullptr
-	);
+	HWND window;
+	if (settings::config::MoonlightAim) {
+		window = CreateWindowExW(
+			WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOOLWINDOW,
+			wc.lpszClassName,
+			settings::window::WindowName,
+			WS_POPUP,
+			0,
+			0,
+			settings::window::Width,
+			settings::window::Height,
+			nullptr,
+			nullptr,
+			wc.hInstance,
+			nullptr
+		);
+	}
+	else {
+		window = CreateWindowExW(
+			WS_EX_TOPMOST | WS_EX_TRANSPARENT,
+			wc.lpszClassName,
+			settings::window::WindowName,
+			WS_POPUP,
+			0,
+			0,
+			settings::window::Width,
+			settings::window::Height,
+			nullptr,
+			nullptr,
+			wc.hInstance,
+			nullptr
+		);
+	}
 
 	SetLayeredWindowAttributes(window, RGB(0, 0, 0), BYTE(255), LWA_ALPHA);
 
@@ -79,8 +98,8 @@ bool InitWindow(HINSTANCE instance, INT cmd_show)
 	sd.BufferCount = 2U;
 	sd.OutputWindow = window;
 	sd.Windowed = TRUE;
-	sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD; // DXGI_SWAP_EFFECT_DISCARD
+	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; // DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
 
 	constexpr D3D_FEATURE_LEVEL levels[2]{
 		D3D_FEATURE_LEVEL_11_0,
@@ -277,7 +296,21 @@ bool UpdateWindow(void (*mainfunc)()) {
 
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-	swap_chain->Present(0U, 0U);
+	swap_chain->Present(settings::config::vSync ? 1:0, 0);
+
+	D3D11_QUERY_DESC queryDesc = { D3D11_QUERY_EVENT, 0 };
+	ID3D11Query* frameQuery;
+	device->CreateQuery(&queryDesc, &frameQuery);
+
+	// Insert a fence-like query at the end of the frame
+	device_context->End(frameQuery);
+
+	// Wait for the GPU to signal the query has been completed
+	while (device_context->GetData(frameQuery, NULL, 0, 0) != S_OK) {
+		// Wait (this ensures the CPU doesn't proceed prematurely)
+	}
+
+	frameQuery->Release();
 
 	__int64 elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
 	stats::mainThreadData.addValue(static_cast<float>(elapsed));

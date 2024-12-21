@@ -33,7 +33,7 @@ namespace offsets {
 	uintptr_t LocationUnderReticle = 0x2748;
 	uintptr_t WeaponData = 0x690;
 	uintptr_t CurrentWeapon = 0xDC8;
-	uintptr_t WeaponProjectileSpeed = 0x1D84;
+	uintptr_t WeaponProjectileSpeed = 0x1D20;
 	uintptr_t WeaponProjectileGravity = 0x1D88;
 
 	uintptr_t FNamePool = 0x12BA9140;

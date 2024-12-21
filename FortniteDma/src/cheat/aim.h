@@ -62,6 +62,9 @@ namespace aim {
 		return { yawDegrees, pitchDegrees };
 	}
 
+	PlayerCache target{};
+	bool Targetting = false;
+
 	void updateAimbot()
 	{
 		if (!settings::runtime::hotKeys)
@@ -74,24 +77,11 @@ namespace aim {
 		// not in game / alive
 		if (!point::Player || !point::PlayerState)
 			return;
-
-		static PlayerCache target{};
-
-		struct lastInfo {
-			bool active = false;
-			float currentY = 0;
-			float currentX = 0;
-			float AngleX = 0;
-			float AngleY = 0;
-		};
-
-		static lastInfo current{};
-
-		bool Targetting = false;
-		bool ValidTarget = true;
-
+		
 		if (mem.IsKeyDown(settings::config::AimKey)) {
 			std::unordered_map<uintptr_t, PlayerCache> PlayerList = secondPlayerList;
+
+			bool ValidTarget = true;
 
 			if (target.PlayerState) {
 
@@ -157,41 +147,6 @@ namespace aim {
 
 			target = closestPlayer;
 
-			// calculate the avarage (ideal) step with a max of 1000 samples
-			if (current.active) {
-				float newY = mainCamera.Rotation.y - current.currentY;
-
-				while (newY > 180.0f) newY -= 360.0f;
-				while (newY < -180.0f) newY += 360.0f;
-
-				if (std::abs(newY) > 0.1f) {
-					float StepPerDegreeX = (current.AngleX / newY);
-					if (StepPerDegreeX > 1 && StepPerDegreeX < 1000) {
-						std::cout << "StepPerDegreeX -> " << StepPerDegreeX << std::endl;
-						settings::config::StepsX.addValue(StepPerDegreeX);
-						const auto& StepsXValues = settings::config::StepsX.getValues();
-						float StepsXAvg = std::accumulate(StepsXValues.begin(), StepsXValues.end(), 0.0f) / StepsXValues.size();
-						settings::config::StepPerDegreeX = StepsXAvg;
-					}
-				}
-
-				float newX = mainCamera.Rotation.x - current.currentX;
-
-				while (newX > 89.9f) newX = 89.9f;
-				while (newX < -89.9f) newX = -89.9f;
-
-				if (std::abs(newX) > 0.1f) {
-					float StepPerDegreeY = (current.AngleY / newX);
-					if (StepPerDegreeY < -1 && StepPerDegreeY > -1000) {
-						std::cout << "StepPerDegreeY -> " << StepPerDegreeY << std::endl;
-						settings::config::StepsY.addValue(StepPerDegreeY);
-						const auto& StepsYValues = settings::config::StepsY.getValues();
-						float StepsYAvg = std::accumulate(StepsYValues.begin(), StepsYValues.end(), 0.0f) / StepsYValues.size();
-						settings::config::StepPerDegreeY = StepsYAvg;
-					}
-				}
-			}
-
 			Vector3 originalTarget3D = closestPlayer.Head3D;
 			Vector3 originalTarget2D = closestPlayer.Head2D;
 
@@ -216,25 +171,26 @@ namespace aim {
 			while (targety > 180.0f) targety -= 360.0f;
 			while (targety < -180.0f) targety += 360.0f;
 
-			while (targetx > 89.9f) targetx = 89.9f;
-			while (targetx < -89.9f) targetx = -89.9f;
+			std::clamp(targetx, -89.9f, 89.9f);
 
-			float AngleX = targety * (settings::config::StepPerDegreeX / settings::config::AimSmoothing);
-			float AngleY = targetx * (settings::config::StepPerDegreeY / settings::config::AimSmoothing);
+			float xPercent = point::MouseSensX / 0.25f;
+			float xStep = 1.8f * (1.f / xPercent);
 
-			// save rotations
-			{
-				current.currentY = currentY;
-				current.currentX = currentX;
+			float yPercent = point::MouseSensY / 0.25f;
+			float yStep = -1.8f * (1.f / yPercent);
 
-				current.AngleX = AngleX;
-				current.AngleY = AngleY;
+			float fovScale = 80.f / mainCamera.FieldOfView;
 
-				current.active = true;
+			xStep *= fovScale;
+			yStep *= fovScale;
+
+			float AngleX = targety * (xStep / settings::config::AimSmoothing); // settings::config::StepPerDegreeX
+			float AngleY = targetx * (yStep / settings::config::AimSmoothing); // settings::config::StepPerDegreeY
+
+			if (settings::config::MoonlightAim) {
+				mouse_event(MOUSEEVENTF_MOVE, AngleX, AngleY, 0, 0);
 			}
-			//
-
-			if (settings::kmbox::NetKmbox) {
+			else if (settings::kmbox::NetKmbox) {
 				kmNet_mouse_move(AngleX, AngleY);
 			}
 			else {
@@ -244,9 +200,6 @@ namespace aim {
 		else {
 			target.PlayerState = 0;
 			Targetting = false;
-
-			// reset current rotation
-			current.active = false;
 		}
 	}
 
@@ -264,7 +217,11 @@ namespace aim {
 		static bool clicked = false;
 
 		if (clicked) {
-			kmNet_mouse_left(false);
+			if (settings::config::MoonlightAim)
+				mouse_event(MOUSEEVENTF_LEFTUP, mainCamera.Rotation.x, mainCamera.Rotation.y, 0, 0);
+			else
+				kmNet_mouse_left(false);
+
 			clicked = false;
 		}
 
@@ -291,7 +248,12 @@ namespace aim {
 
 				if (isHit(player.Head3D)) {
 					lastClick = std::chrono::steady_clock::now();
-					if (settings::kmbox::NetKmbox) {
+
+					if (settings::config::MoonlightAim) {
+						mouse_event(MOUSEEVENTF_LEFTDOWN, NULL, NULL, NULL, NULL);
+						clicked = true;
+					}
+					else if (settings::kmbox::NetKmbox) {
 						kmNet_mouse_left(true);
 						clicked = true;
 					}
