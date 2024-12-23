@@ -23,9 +23,6 @@ namespace esp {
 	void renderPlayers()
 	{
 
-		// we make a copy of the cache we dont want modifications from elsewhere while using it
-		std::unordered_map<uintptr_t, PlayerCache> PlayerList = secondPlayerList;
-
 		// stats
 		int playersRendered = 0;
 		int playersLooped = 0;
@@ -40,6 +37,9 @@ namespace esp {
 
 		for (auto it : secondPlayerList) {
 			PlayerCache player = it.second;
+
+			if (player.ignore)
+				continue;
 
 			playersLooped++;
 
@@ -74,7 +74,7 @@ namespace esp {
 			}
 
 			// check if dying (dead) ◉_◉
-			if (player.isDying) {
+			if (player.bisDying) {
 				//ImGui::GetBackgroundDrawList()->AddText((ImFont*)fonts::notosans_font, 18.5f, ImVec2(player.Neck2D.x, player.Neck2D.y), ImColor(255, 255, 255, 255), "dying");
 				continue;
 			}
@@ -96,7 +96,7 @@ namespace esp {
 					colSK = ImColor(0, 255, 0, 255);
 
 				//thickness
-				float tk = 2.f;
+				float tk = 0.8f;
 
 				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.Neck2D.x, player.Neck2D.y), ImVec2(player.Head2D.x, player.Head2D.y), colSK, tk);
 				ImGui::GetBackgroundDrawList()->AddLine(ImVec2(player.Hip2D.x, player.Hip2D.y), ImVec2(player.Neck2D.x, player.Neck2D.y), colSK, tk);
@@ -136,13 +136,6 @@ namespace esp {
 				//	topLeft.x + (width / 2.0f) - (nameSize.x / 2.0f),
 				//	topLeft.y - nameSize.y - 5.0f
 				//);
-				
-				string distanceStr = std::format("({:d}m)", distanceMeters);
-				ImVec2 distanceSize = ImGui::CalcTextSize(distanceStr.c_str());
-				ImVec2 distancePos = ImVec2(
-					topLeft.x + (box_width / 2.0f) - (distanceSize.x / 2.0f),
-					bottomRight.y + 5.0f
-				);
 
 				ImGui::GetBackgroundDrawList()->AddRect(topLeft, bottomRight, colBox, rd, NULL, tk);
 			}
@@ -197,7 +190,12 @@ namespace esp {
 	void Debug() 
 	{
 
-		// future
+		const auto& MainValues = stats::mainThreadData.getValues();
+		float mainAvgMs = std::accumulate(MainValues.begin(), MainValues.end(), 0.0f) / MainValues.size();
+		float mainFPS = (mainAvgMs > 0) ? (1000.0f / mainAvgMs) : 0.0f;
+		string mainStr = std::format("FPS: {:.0f}", mainFPS);
+
+		ImGui::GetBackgroundDrawList()->AddText(ImVec2(10, 10), ImColor(255, 255, 255, 255), mainStr.c_str());
 
 	}
 }

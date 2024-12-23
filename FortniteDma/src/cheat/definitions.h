@@ -249,44 +249,63 @@ struct FNRot
 	double c;
 };
 
+struct tarray
+{
+	uintptr_t data;
+	uint32_t count;
+	uint32_t max;
+};
+
+enum class BoneID : int {
+	HeadBone = 68,
+	BottomBone = 0,
+	NeckBone = 66,
+	HipBone = 2,
+	UpperArmLeftBone = 9,
+	UpperArmRightBone = 38,
+	LeftHandBone = 10,
+	RightHandBone = 39,
+	LeftHandTBone = 11,
+	RightHandTBone = 40,
+	RightThighBone = 78,
+	LeftThighBone = 71,
+	RightCalfBone = 79,
+	LeftCalfBone = 72,
+	LeftFootBone = 75,
+	RightFootBone = 82
+};
+
 struct PlayerCache {
-	bool cached = true;
-	int useCount = 0;
+	bool ignore = false;
 
 	chrono::system_clock::time_point lastUpdate = std::chrono::system_clock::now();
 
 	uintptr_t PlayerState = 0;
 	uintptr_t Pawn = 0;
+	chrono::system_clock::time_point lastPawn = std::chrono::system_clock::now();
 	uintptr_t Mesh = 0;
-	uintptr_t BoneArray = 0;
-	uintptr_t BoneArray1 = 0;
-	uintptr_t BoneArray2 = 0;
 	uintptr_t RootComponent = 0;
+	chrono::system_clock::time_point lastMesh = std::chrono::system_clock::now(); // root component too
+	uintptr_t BoneArray = 0;
+	tarray BoneArrays[2]{};
+	chrono::system_clock::time_point lastBoneArray = std::chrono::system_clock::now();
 	Vector3 Velocity{};
+	chrono::system_clock::time_point lastVelocity = std::chrono::system_clock::now();
 	uint32_t TeamId = 0;
+	chrono::system_clock::time_point lastTeamId = std::chrono::system_clock::now();
 	float last_render = 0;
 
-	bool isDying = false;
-	bool isDBNO = false;
-	bool isBot = false;
+	BYTE isDying = 0;
+	BYTE isDBNO = 0;
+	bool isBot = 0;
 
-	FTransform HeadBone{}; // 68
-	FTransform BottomBone{}; // 0
+	bool bisDying = false;
+	bool bisDBNO = false;
 
-	FTransform NeckBone{}; // 66
-	FTransform HipBone{}; // 2
-	FTransform UpperArmLeftBone{}; // 9
-	FTransform UpperArmRightBone{}; // 38
-	FTransform LeftHandBone{}; // 10
-	FTransform RightHandBone{}; // 39
-	FTransform LeftHandTBone{}; // 11
-	FTransform RightHandTBone{}; // 40
-	FTransform RightThighBone{}; // 78
-	FTransform LeftThighBone{}; // 71
-	FTransform RightCalfBone{}; // 79
-	FTransform LeftCalfBone{}; // 72
-	FTransform LeftFootBone{}; // 75
-	FTransform RightFootBone{}; // 82
+	struct {
+		FTransform Bone{};
+		char pad[8]{};
+	}Bones[83]{};
 
 	FTransform component_to_world{};
 
@@ -337,12 +356,6 @@ struct PlayerCache {
 inline bool isPlayerValid(PlayerCache player) {
 	return player.Pawn && player.BoneArray;
 }
-
-struct tarray
-{
-	uintptr_t data;
-	uint32_t count;
-};
 
 struct Rotation {
 	float yaw;   // Rotation around Y-axis

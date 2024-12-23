@@ -57,7 +57,7 @@ Rotation targetRotation(const Vector3& currentPosition, const Vector3& targetPos
 }
 
 void menu::Menu() {
-	ImVec2 size = ImVec2(940, 500);
+	ImVec2 size = ImVec2(50 * (settings::window::Width/100), 50 * (settings::window::Height / 100) + 30);
 	ImGui::SetNextWindowSize(size);
 	ImGui::PushFont((ImFont*)fonts::typenatural_font);
 	if (ImGui::Begin(std::format("SuperNatural v{:d}.{:d}\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tkey Insert", settings::runtime::version_major, settings::runtime::version_minor).c_str(), NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
@@ -71,8 +71,8 @@ void menu::Menu() {
 		static bool selectingTrigger = false;
 
 		// aim options
-		ImGui::SetCursorPos(ImVec2(10, 30));
-		ImGui::BeginChild("Aim", ImVec2(300, 460), ImGuiChildFlags_Border);
+		ImGui::SetCursorPos(ImVec2(((size.x - 40)/3) * 0 + 10, 30));
+		ImGui::BeginChild("Aim", ImVec2((size.x - 40) / 3, size.y - 40), ImGuiChildFlags_Border);
 		ImGui::Separator();
 		ImGui::Text("Aim");
 		ImGui::Checkbox("Aimbot", &settings::config::Aimbot);
@@ -152,8 +152,8 @@ void menu::Menu() {
 		ImGui::EndChild();
 
 		// esp options
-		ImGui::SetCursorPos(ImVec2(320, 30));
-		ImGui::BeginChild("Esp", ImVec2(300, 460), ImGuiChildFlags_Border);
+		ImGui::SetCursorPos(ImVec2(((size.x - 40) / 3) * 1 + 20, 30));
+		ImGui::BeginChild("Esp", ImVec2(300, size.y - 40), ImGuiChildFlags_Border);
 		ImGui::Separator();
 		ImGui::Text("Esp");
 		ImGui::Checkbox("Fuser Mode", &settings::config::Fuser);
@@ -163,11 +163,9 @@ void menu::Menu() {
 		ImGui::Checkbox("Box", &settings::config::Box);
 		ImGui::Checkbox("Skeleton", &settings::config::Skeleton);
 		ImGui::Checkbox("Distance", &settings::config::Distance);
+
 		ImGui::Separator();
 
-
-		ImGui::SetCursorPos(ImVec2(10, 310));
-		ImGui::Separator();
 		ImGui::Text("Radar");
 		ImGui::Checkbox("Radar", &settings::config::Radar);
 		settings::config::RadarXSize = settings::config::RadarYSize;
@@ -179,8 +177,8 @@ void menu::Menu() {
 		ImGui::EndChild();
 
 		// debug options
-		ImGui::SetCursorPos(ImVec2(630, 30));
-		ImGui::BeginChild("Debug", ImVec2(300, 460), ImGuiChildFlags_Border);
+		ImGui::SetCursorPos(ImVec2(((size.x - 40) / 3) * 2 + 30, 30));
+		ImGui::BeginChild("Debug", ImVec2(300, size.y - 40), ImGuiChildFlags_Border);
 		ImGui::Separator();
 		ImGui::Text("Debug");
 		ImGui::Checkbox("Statistics", &settings::menu::Statistics);
@@ -192,49 +190,7 @@ void menu::Menu() {
 		if (ImGui::Button("Close Cheat")) {
 			exit(0);
 		}
-		//if (ImGui::Button("Calibrate Aim")) {
 
-		//	float currenty = mainCamera.Rotation.y;
-		//	float currentx = mainCamera.Rotation.x;
-
-		//	float AngleX = -10;
-		//	float AngleY = -10;
-
-		//	kmNet_mouse_move(AngleX, AngleY);
-
-		//	Sleep(50);
-
-		//	float newy = mainCamera.Rotation.y - currenty;
-
-		//	while (newy > 180.0f) newy -= 360.0f;
-		//	while (newy < -180.0f) newy += 360.0f;
-
-		//	float newx = mainCamera.Rotation.x - currentx;
-
-		//	while (newx > 89.9f) newx = 89.9f;
-		//	while (newx < -89.9f) newx = -89.9f;
-
-		//	float StepPerDegreeX = (AngleX / newy);
-		//	float StepPerDegreeY = (AngleY / newx);
-
-		//	std::cout << hue::green << "(+) " << hue::white << "X calculated step is " << StepPerDegreeX << std::endl;
-
-		//	std::cout << hue::green << "(+) " << hue::white << "Y calculated step is " << StepPerDegreeY << std::endl;
-
-		//	if (StepPerDegreeX < 0 || StepPerDegreeX > 100 ||
-		//		StepPerDegreeY > 0 || StepPerDegreeY < -100){
-		//		std::cout << hue::yellow << "(/) " << hue::white << "Aim calibration seems to have failed" << std::endl;
-		//		std::cout << hue::yellow << "(/) " << hue::white << "When calibrating make sure you use your second pc to click the calibrate button" << std::endl;
-		//		std::cout << hue::yellow << "(/) " << hue::white << "And that your main pc is focused on the game" << std::endl;
-		//	}
-		//	else {
-		//		settings::config::StepPerDegreeX = StepPerDegreeX;
-		//		settings::config::StepPerDegreeY = StepPerDegreeY;
-		//		settings::saveConfig();
-		//	}
-		//}
-
-		ImGui::SetCursorPos(ImVec2(630, 310));
 		ImGui::Separator(); // why does this one not show?
 		ImGui::Separator();
 		ImGui::Text("Configs");
@@ -288,14 +244,14 @@ void menu::StatisticsWindow() {
 	ImGui::SetNextWindowSize(size);
 	if (ImGui::Begin("Statistics", NULL, ImGuiWindowFlags_NoResize)) {
 
-		// memory thread
-		const auto& MemoryValues = stats::memoryThreadData.getValues();
-		float memoryAvgMs = std::accumulate(MemoryValues.begin(), MemoryValues.end(), 0.0f) / MemoryValues.size();
-		float memoryFPS = (memoryAvgMs > 0) ? (1000.0f / memoryAvgMs) : 0.0f;
+		// MainUpdate
+		const auto& PlayersValues = stats::updatePlayersData.getValues();
+		float PlayersAvgMs = std::accumulate(PlayersValues.begin(), PlayersValues.end(), 0.0f) / PlayersValues.size();
+		float PlayersMaxMs = PlayersValues.empty() ? 0.0f : *std::max_element(PlayersValues.begin(), PlayersValues.end());
 
-		ImGui::Text("Memory thread performance Graph (ms per loop)");
-		ImGui::PlotLines("##Performance", MemoryValues.data(), MemoryValues.size(), 0, nullptr, 0.0f, 50.0f, ImVec2(0, 100));
-		ImGui::Text("Average: %.2f ms (%.1f FPS)", memoryAvgMs, memoryFPS);
+		ImGui::Text("Main Update performance Graph (us per execution)");
+		ImGui::PlotLines("##Performance", PlayersValues.data(), PlayersValues.size(), 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
+		ImGui::Text("Average: %.2f us Max: %.2f us", PlayersAvgMs, PlayersMaxMs);
 
 		ImGui::Separator();
 
@@ -336,28 +292,6 @@ void menu::StatisticsWindow() {
 			ImGui::Text("PlayerList performance Graph (ms per execution)");
 			ImGui::PlotLines("##Performance", PlayerListValues.data(), PlayerListValues.size(), 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
 			ImGui::Text("Average: %.2f ms Max: %.2f ms", PlayerListAvgMs, PlayerListMaxMs);
-
-			ImGui::Separator();
-
-			// Camera
-			const auto& CameraValues = stats::updateCameraData.getValues();
-			float CameraAvgMs = std::accumulate(CameraValues.begin(), CameraValues.end(), 0.0f) / CameraValues.size();
-			float CameraMaxMs = CameraValues.empty() ? 0.0f : *std::max_element(CameraValues.begin(), CameraValues.end());
-
-			ImGui::Text("Camera performance Graph (ms per execution)");
-			ImGui::PlotLines("##Performance", CameraValues.data(), CameraValues.size(), 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
-			ImGui::Text("Average: %.2f ms Max: %.2f ms", CameraAvgMs, CameraMaxMs);
-
-			ImGui::Separator();
-
-			// PlayerList
-			const auto& PlayersValues = stats::updatePlayersData.getValues();
-			float PlayersAvgMs = std::accumulate(PlayersValues.begin(), PlayersValues.end(), 0.0f) / PlayersValues.size();
-			float PlayersMaxMs = PlayersValues.empty() ? 0.0f : *std::max_element(PlayersValues.begin(), PlayersValues.end());
-
-			ImGui::Text("PlayersPos performance Graph (ms per execution)");
-			ImGui::PlotLines("##Performance", PlayersValues.data(), PlayersValues.size(), 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
-			ImGui::Text("Average: %.2f ms Max: %.2f ms", PlayersAvgMs, PlayersMaxMs);
 		}
 
 	} ImGui::End();
@@ -401,8 +335,8 @@ void menu::PlayerListWindow() {
 			ImGui::Separator();
 			ImGui::Text(std::format("Pawn -> 0x{:X}", PlayerList[selectedPlayer].Pawn).c_str());
 			ImGui::Text(std::format("Mesh -> 0x{:X}", PlayerList[selectedPlayer].Mesh).c_str());
-			uintptr_t BoneArray = PlayerList[selectedPlayer].BoneArray1;
-			if (!BoneArray) BoneArray = PlayerList[selectedPlayer].BoneArray2;
+			uintptr_t BoneArray = PlayerList[selectedPlayer].BoneArrays[0].data;
+			if (!BoneArray) BoneArray = PlayerList[selectedPlayer].BoneArrays[1].data;
 			ImGui::Text(std::format("BoneArray -> 0x{:X}", BoneArray).c_str());
 			ImGui::Text(std::format("RootComponent -> 0x{:X}", PlayerList[selectedPlayer].RootComponent).c_str());
 			ImGui::Separator();

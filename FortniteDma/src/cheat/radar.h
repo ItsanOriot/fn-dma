@@ -120,7 +120,7 @@ namespace radar {
 				continue;
 			}
 
-			if (player.isDying)
+			if (player.bisDying)
 				continue;
 
 			// should be in the updates
@@ -135,7 +135,7 @@ namespace radar {
 				color = ImColor(0, 255, 0, 255);
 
 			// orange knocked players
-			if (player.isDBNO)
+			if (player.bisDBNO)
 				color = ImColor(255, 100, 0, 255);
 
 			// blue bots

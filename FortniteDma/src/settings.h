@@ -11,8 +11,8 @@ namespace settings {
 		inline int version_minor = 2;
 		inline bool criticalPriority = true;
 		inline bool headless = false; // no console
-		inline bool windowless = false; // no window
-		inline bool graphicsOnly = false; // just the menu
+		inline bool windowless = false; // no window (to fix)
+		inline bool graphicsOnly = true; // just the menu
 		inline std::string configFile = "configs.txt";
 
 		// internal

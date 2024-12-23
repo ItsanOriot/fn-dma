@@ -154,18 +154,6 @@ bool on_initialize() {
 		feature KeysUpdate = { memKeysUpdate , 1, 5 };
 		memoryList.push_back(KeysUpdate);
 
-		// update camera location and rotation HIGH PRIORITY
-		feature CameraUpdate = { updateCamera , 1, 0 };
-		memoryList.push_back(CameraUpdate);
-
-		// update players location HIGH PRIORITY
-		feature PlayersUpdate = { updatePlayers , 1, 0 };
-		memoryList.push_back(PlayersUpdate);
-
-		// aimbot
-		feature Aimbot = { aim::updateAimbot, 1, 5 };
-		memoryList.push_back(Aimbot);
-
 	}
 
 	// main thread features
@@ -174,26 +162,29 @@ bool on_initialize() {
 		feature HealthCheck = { healthChecks, 1, 100 };
 		mainList.push_back(HealthCheck);
 
+		// aimbot
+		feature Aimbot = { aim::updateAimbot, 1, 5 };
+		mainList.push_back(Aimbot);
+
 		// triggerbot
 		feature Triggerbot = { aim::updateTriggerBot, 1, 5 };
 		mainList.push_back(Triggerbot);
 
-		if (settings::runtime::windowless)
-			return true;
-
-		// drawing features must be run every loop
-
 		// debugging drawings
-		feature Debug = { esp::Debug, 1, 0 };
+		feature Debug = { esp::Debug, 1, -1 };
 		mainList.push_back(Debug);
 
-		// radar
-		feature Radar = { radar::Render, 1, 0 };
-		mainList.push_back(Radar);
+		// update camera and players location
+		feature PlayersUpdate = { MainUpdate , 1, -1 };
+		mainList.push_back(PlayersUpdate);
 
 		// esp 
-		feature Walls = { esp::renderPlayers, 1, 0 };
+		feature Walls = { esp::renderPlayers, 1, -1 };
 		mainList.push_back(Walls);
+
+		// radar
+		feature Radar = { radar::Render, 1, -1 };
+		mainList.push_back(Radar);
 	}
 
 	return true;
