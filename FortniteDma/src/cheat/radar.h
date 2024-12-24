@@ -109,6 +109,9 @@ namespace radar {
 		for (auto it : PlayerList) {
 			PlayerCache player = it.second;
 
+			if (player.ignore)
+				continue;
+
 			if (!isPlayerValid(player))
 				continue;
 

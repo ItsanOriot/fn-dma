@@ -96,7 +96,7 @@ namespace aim {
 
 					bool IsVis = point::Seconds - target.last_render <= 0.06f;
 
-					if (target.isDying || !IsVis || dist > settings::config::AimFov)
+					if (target.ignore || target.isDying || !IsVis || dist > settings::config::AimFov)
 						ValidTarget = false;
 
 				}
@@ -116,6 +116,8 @@ namespace aim {
 				bool closePlayerFound = false;
 				for (auto it : PlayerList) {
 					PlayerCache player = it.second;
+
+					if (player.ignore) continue;
 
 					if (!player.Pawn || !player.Mesh || !player.BoneArray) continue;
 
@@ -234,6 +236,8 @@ namespace aim {
 
 			for (auto it : PlayerList) {
 				PlayerCache player = it.second;
+
+				if (player.ignore) continue;
 
 				if (!player.Pawn || !player.Mesh || !player.BoneArray) continue;
 

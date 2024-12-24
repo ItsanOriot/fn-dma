@@ -301,16 +301,6 @@ void MainUpdate()
 	// prepare all the reads in parallel
 	std::for_each(std::execution::par, secondPlayerList.begin(), secondPlayerList.end(), [&](auto& it) {
 
-		if (it.second.PlayerState && std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - it.second.lastPawn).count() > it.second.Pawn ? 500 : 2500) {
-			mem.SPrepareEx(mem.hS4, it.second.PlayerState + offsets::PawnPrivate, sizeof(uintptr_t), &it.second.Pawn);
-			it.second.lastPawn = std::chrono::system_clock::now();
-		}
-
-		if (it.second.PlayerState && std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - it.second.lastTeamId).count() > 2500) {
-			mem.SPrepareEx(mem.hS4, it.second.PlayerState + offsets::TeamId, sizeof(uint32_t), &it.second.TeamId);
-			it.second.lastTeamId = std::chrono::system_clock::now();
-		}
-
 		if (!it.second.Pawn || point::Player && it.second.TeamId == local_player::localTeam) {
 			it.second.ignore = true;
 		} 
@@ -340,6 +330,16 @@ void MainUpdate()
 			}
 
 			it.second.ignore = false;
+		}
+
+		if (it.second.PlayerState && std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - it.second.lastPawn).count() > 500) {
+			mem.SPrepareEx(mem.hS4, it.second.PlayerState + offsets::PawnPrivate, sizeof(uintptr_t), &it.second.Pawn);
+			it.second.lastPawn = std::chrono::system_clock::now();
+		}
+
+		if (it.second.PlayerState && std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - it.second.lastTeamId).count() > 2500) {
+			mem.SPrepareEx(mem.hS4, it.second.PlayerState + offsets::TeamId, sizeof(uint32_t), &it.second.TeamId);
+			it.second.lastTeamId = std::chrono::system_clock::now();
 		}
 
 	});

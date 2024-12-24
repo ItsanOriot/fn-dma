@@ -12,7 +12,7 @@ namespace settings {
 		inline bool criticalPriority = true;
 		inline bool headless = false; // no console
 		inline bool windowless = false; // no window (to fix)
-		inline bool graphicsOnly = true; // just the menu
+		inline bool graphicsOnly = false; // just the menu
 		inline std::string configFile = "configs.txt";
 
 		// internal
