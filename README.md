@@ -1,1 +1,2 @@
-Fully featured fortnite DMA cheat using PCILeech. An extremely early version of ZeroDMA's fortnite DMA cheat, which was publicly released on unknowncheats by me and a collaborator.
+Fully featured fortnite DMA cheat using PCILeech. An extremely early version of ZeroDMA's fortnite DMA cheat, which was publicly released on unknowncheats by a collaborator and me.
+Later versions were updated by JonBird and me, becoming "ZeroDMA". Later updates focus almost entirely on optimization, including a nearly full rewrite of the codebase. The only bottleneck is DMA card readtimes, with future versions approaching the theoretical framerate limit, as a single memory read was enough to update the entire cache (through scatter reads).
